@@ -62,6 +62,7 @@ def find_column(df: pd.DataFrame, key1: str, key2: Optional[str] = None):
     return None
 
 
+# Mengunduh tabel ringkasan cuaca permukaan harian dari portal Ogimet untuk stasiun 96163 selama 1 bulan.
 def fetch_month_data(
     year: int,
     month: int,
@@ -130,6 +131,7 @@ def fetch_month_data(
     return None
 
 
+# Menyusun DataFrame standar dengan kolom baku date, rr (curah hujan), tavg (suhu rata-rata), dan rh (kelembapan).
 def _standardize_month(df_raw: pd.DataFrame, year: int, month: int) -> pd.DataFrame:
     """Bangun DataFrame standar (nama kolom baku) dari tabel mentah satu
     bulan, identik dengan blok `main()` ogimet_downloader.py."""
@@ -175,6 +177,7 @@ def _standardize_month(df_raw: pd.DataFrame, year: int, month: int) -> pd.DataFr
     return df_month
 
 
+# Mengubah token khusus Ogimet ('Tr' dipetakan ke 0.0 mm hujan jejak; '----' dan '-----' ke NaN).
 def _apply_ogimet_placeholder(series: pd.Series) -> pd.Series:
     """Placeholder standardisasi Stage 2 (WAJIB, urutan tidak boleh diubah):
     'Tr' -> 0.0, '----'/'-----' -> NaN, lalu konversi numerik."""
@@ -184,6 +187,7 @@ def _apply_ogimet_placeholder(series: pd.Series) -> pd.Series:
     return pd.to_numeric(series, errors="coerce")
 
 
+# Mengambil data harian Ogimet terstandardisasi untuk rentang window: menggunakan dataset historis jika ada, atau fallback ke web scraping/cache disk.
 def get_ogimet_daily(
     start_date: pd.Timestamp,
     end_date: pd.Timestamp,
@@ -204,7 +208,7 @@ def get_ogimet_daily(
     missing_dates = []
 
     # Coba lookup data historis per tanggal
-    for d in dates:
+    for d in dates: 
         date_str = d.strftime("%Y-%m-%d")
         hist_row = get_historical_row(date_str)
         if hist_row is not None:

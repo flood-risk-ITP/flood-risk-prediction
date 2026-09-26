@@ -51,6 +51,7 @@ class ValidationGateError(Exception):
         super().__init__("Validation gate gagal:\n- " + "\n- ".join(reasons))
 
 
+# Validation Gate: Memeriksa kelayakan input sebelum inference. Menghentikan prediksi jika data 7 hari tidak lengkap atau tidak valid.
 def _run_validation_gate(
     window_dates: list[pd.Timestamp], feature_matrix: pd.DataFrame, scaler
 ) -> list[str]:
@@ -58,27 +59,24 @@ def _run_validation_gate(
     Mengembalikan daftar alasan kegagalan (list kosong = lulus)."""
     reasons: list[str] = []
 
-    # [ ] seluruh 7 tanggal D-7..D-1 tersedia (sudah dijamin oleh
-    #     extract_feature_matrix yang melempar KeyError -- ditangani di
-    #     caller sebelum fungsi ini dipanggil), di sini kita cek ulang
-    #     jumlah baris.
+    # Memastikan jumlah tanggal tersedia persis sama dengan nilai LOOKBACK (7 hari).
     if len(feature_matrix) != LOOKBACK:
         reasons.append(
             f"Jumlah tanggal tersedia ({len(feature_matrix)}) != LOOKBACK ({LOOKBACK})"
         )
 
-    # [ ] tidak ada duplicate date, [ ] ascending tanpa celah
+    # Memeriksa kontinuitas tanggal (tidak duplikat, ascending, tanpa celah hari).
     continuity = validate_window_continuity(window_dates)
     if not continuity["valid"]:
         reasons.extend(continuity["reasons"])
 
-    # [ ] 8 fitur tersedia untuk setiap tanggal
+    # Memastikan 8 kolom fitur tersedia seluruhnya.
     missing_cols = [c for c in FEATURE_COLUMNS if c not in feature_matrix.columns]
     if missing_cols:
         reasons.append(f"Kolom fitur tidak tersedia: {missing_cols}")
         return reasons  # pemeriksaan berikutnya butuh seluruh kolom ada
 
-    # [ ] 8 fitur bertipe numerik
+    # Memastikan seluruh 8 kolom fitur bertipe numerik.
     non_numeric = [
         c for c in FEATURE_COLUMNS
         if not pd.api.types.is_numeric_dtype(feature_matrix[c])
@@ -86,7 +84,7 @@ def _run_validation_gate(
     if non_numeric:
         reasons.append(f"Kolom fitur bukan numerik: {non_numeric}")
 
-    # [ ] tidak ada NaN pada array (7, 8) setelah seluruh preprocessing
+    # Memastikan tidak ada nilai NaN tersisa pada matriks (7 hari, 8 fitur) setelah preprocessing.
     nan_mask = feature_matrix[FEATURE_COLUMNS].isna()
     if nan_mask.to_numpy().any():
         nan_dates = feature_matrix.index[nan_mask.any(axis=1)]
@@ -99,14 +97,13 @@ def _run_validation_gate(
             f"NO_SOUNDING di dalam window): {nan_cols_per_date}"
         )
 
-    # [ ] scaler memiliki n_features_in_ == 8
+    # Memastikan jumlah dan urutan fitur sesuai dengan yang diharapkan oleh objek scaler.
     n_features_in = getattr(scaler, "n_features_in_", None)
     if n_features_in != len(FEATURE_COLUMNS):
         reasons.append(
             f"scaler.n_features_in_ ({n_features_in}) != {len(FEATURE_COLUMNS)}"
         )
 
-    # [ ] urutan fitur yang dikirim ke scaler == feature_names_in_ scaler
     expected_order = list(getattr(scaler, "feature_names_in_", []))
     if expected_order and list(feature_matrix.columns) != expected_order:
         reasons.append(
@@ -117,6 +114,7 @@ def _run_validation_gate(
     return reasons
 
 
+# Fungsi utama orkestrasi end-to-end: menjalankan alur dari pengumpulan data hingga keluaran prediksi kategori risiko.
 def predict_for_date(
     target_date,
     model=None,
@@ -172,7 +170,7 @@ def predict_for_date(
     if monthly_medians is None:
         monthly_medians = load_monthly_medians()
 
-    # [1/7] Get Ogimet data
+    # Tahap 1: Pengambilan data cuaca permukaan (rr, tavg, rh) dari Ogimet untuk window 7 hari.
     t0 = time.perf_counter()
     try:
         ogimet_df = get_ogimet_daily(fetch_start, fetch_end, use_cache=use_cache)
@@ -192,7 +190,7 @@ def predict_for_date(
             "reasons": [f"Gagal akuisisi data Ogimet: {exc}"],
         }
 
-    # [2/7] Get Wyoming sounding
+    # Tahap 2: Pengambilan profil sounding atmosfer dari Wyoming Upper Air (12Z / 00Z).
     t0 = time.perf_counter()
     try:
         all_dates = pd.date_range(fetch_start, fetch_end, freq="D")
@@ -213,7 +211,7 @@ def predict_for_date(
             "reasons": [f"Gagal akuisisi data sounding: {exc}"],
         }
 
-    # [3/7] Atmospheric indices
+    # Tahap 3: Perhitungan 5 indeks kestabilan atmosfer (cin, kindex, li, tt, sweat) via SounderPy & SHARPpy.
     t0 = time.perf_counter()
     try:
         selected_count = int((sounding_df["selection_status"] == "SELECTED").sum())
@@ -231,7 +229,7 @@ def predict_for_date(
         print(f"\nTotal runtime: {total_elapsed:.2f}s")
         raise exc
 
-    # [4/7] Data integration
+    # Tahap 4: Penggabungan data permukaan dan data atmosfer ke dalam backbone kalender harian.
     t0 = time.perf_counter()
     try:
         integrated = integrate(ogimet_df, sounding_df, fetch_start, fetch_end)
@@ -246,7 +244,7 @@ def predict_for_date(
         print(f"\nTotal runtime: {total_elapsed:.2f}s")
         raise exc
 
-    # [5/7] Preprocessing
+    # Tahap 5: Preprocessing data hilang (interpolasi Ogimet & imputasi median bulanan Sounding).
     t0 = time.perf_counter()
     try:
         preprocessed = apply_stage7_missing_value_handling(integrated, monthly_medians)
@@ -261,7 +259,7 @@ def predict_for_date(
         print(f"\nTotal runtime: {total_elapsed:.2f}s")
         raise exc
 
-    # [6/7] LB7 sequence
+    # Tahap 6: Ekstraksi 8 fitur, validasi kelayakan data (Validation Gate), normalisasi scaler, dan reshape (1, 7, 8).
     t0 = time.perf_counter()
     try:
         feature_matrix = extract_feature_matrix(preprocessed, window_dates)
@@ -294,7 +292,7 @@ def predict_for_date(
             }
         raise exc
 
-    # [7/7] Model inference
+    # Tahap 7: Eksekusi inference model LSTM, menghitung probabilitas 4 kelas, dan menentukan hasil prediksi kategori risiko.
     t0 = time.perf_counter()
     try:
         result = run_predict(model, X_input)

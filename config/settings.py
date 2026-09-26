@@ -28,10 +28,11 @@ CACHE_DIR = os.path.join(BASE_DIR, ".cache")
 # -----------------------------------------------------------------------
 # KONTRAK MODEL (INFERENCE_CONTRACT.md Bagian 1-2-3-5-6) — JANGAN UBAH
 # -----------------------------------------------------------------------
+# Identitas stasiun pengamatan BMKG (Stasiun Meteorologi Minangkabau / Padang)
 STATION_ID = "96163"
 
-# Urutan ini WAJIB identik dengan scaler.feature_names_in_ dan dengan
-# FEATURE_COLUMNS pada kode aktual Stage 10. Dilarang mengurutkan ulang.
+# 8 fitur input yang digunakan oleh model LSTM untuk prediksi risiko banjir.
+# Urutan ini wajib identik dengan scaler dan model agar input data konsisten.
 FEATURE_COLUMNS = [
     "rr",       # curah hujan harian (Ogimet)
     "tavg",     # suhu udara rata-rata harian (Ogimet)
@@ -43,13 +44,14 @@ FEATURE_COLUMNS = [
     "sweat",    # SWEAT (SHARPpy direct)
 ]
 
-# Kolom Ogimet vs kolom SounderPy/SHARPpy, dipakai untuk memisahkan
-# strategi missing-value handling (Stage 7).
+# Pemisahan variabel permukaan (Ogimet) dan variabel atmosfer atas (Sounding) untuk strategi penanganan data hilang.
 OGIMET_FEATURE_COLUMNS = ["rr", "tavg", "rh"]
 SOUNDING_FEATURE_COLUMNS = ["cin", "kindex", "li", "tt", "sweat"]
 
+# Jumlah hari historis (D-7 hingga D-1) yang digunakan sebagai rentang waktu (look-back) input model LSTM.
 LOOKBACK = 7  # D-7 ... D-1, target D tidak termasuk window
 
+# 4 kategori tingkat risiko banjir yang menjadi hasil keluaran klasifikasi model.
 CLASS_NAMES = ["Rendah", "Sedang", "Tinggi", "Sangat Tinggi"]
 
 # -----------------------------------------------------------------------

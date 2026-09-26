@@ -48,6 +48,7 @@ from src.wyoming import _try_hour_cached
 logger = logging.getLogger("inference_pipeline.sounding")
 
 
+# Mencoba mengambil data sounding untuk 1 nominal date: mengutamakan observasi 12Z terlebih dahulu, baru fallback ke 00Z jika 12Z tidak tersedia.
 def _attempt_nominal_date(
     nominal_date: pd.Timestamp, session: requests.Session, use_cache: bool = True
 ) -> dict:
@@ -109,6 +110,7 @@ def _attempt_nominal_date(
     }
 
 
+# Menyusun 1 baris data sounding harian (status seleksi + 5 indeks atmosfer cin, kindex, li, tt, sweat) menggunakan lookup dataset historis atau kalkulasi aktif.
 def get_sounding_row_for_date(
     nominal_date: pd.Timestamp,
     session: Optional[requests.Session] = None,
@@ -191,6 +193,7 @@ def get_sounding_row_for_date(
         "sweat": None,
     }
 
+    # Jika profil sounding berhasil diunduh (SELECTED), hitung 5 indeks atmosfer menggunakan SounderPy dan SHARPpy.
     if selection["selection_status"] == SELECTED_STATUS and selection["profile_df"] is not None:
         try:
             indices = compute_indices_for_sounding(selection["profile_df"])
@@ -208,6 +211,7 @@ def get_sounding_row_for_date(
 
 
 
+# Mengumpulkan data sounding dan indeks atmosfer untuk seluruh tanggal window secara paralel.
 def get_sounding_rows_for_dates(
     dates: list[pd.Timestamp], use_cache: bool = True
 ) -> pd.DataFrame:

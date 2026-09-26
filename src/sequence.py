@@ -18,6 +18,7 @@ import pandas as pd
 from config.settings import FEATURE_COLUMNS, LOOKBACK
 
 
+# Mengambil matriks 8 fitur untuk rentang window 7 hari (D-7..D-1) dengan urutan tanggal dan kolom yang presisi.
 def extract_feature_matrix(df: pd.DataFrame, window_dates: list[pd.Timestamp]) -> pd.DataFrame:
     """Ambil baris untuk window_dates (ascending, D-lookback..D-1) dari df
     hasil preprocessing Stage 7, urut sesuai window_dates, dengan kolom
@@ -38,6 +39,7 @@ def extract_feature_matrix(df: pd.DataFrame, window_dates: list[pd.Timestamp]) -
     return ordered
 
 
+# Melakukan normalisasi fitur menggunakan scaler.transform() yang telah di-fit pada data training agar skala fitur konsisten.
 def scale_features(feature_matrix: pd.DataFrame, scaler) -> np.ndarray:
     """scaler.transform() SAJA -- dilarang scaler.fit()/fit_transform().
     Urutan kolom yang dikirim ke scaler diverifikasi sama dengan
@@ -56,6 +58,7 @@ def scale_features(feature_matrix: pd.DataFrame, scaler) -> np.ndarray:
     return scaler.transform(feature_matrix.astype(float))
 
 
+# Mengubah bentuk array fitur (7 baris, 8 kolom) menjadi tensor 3D (1, 7, 8) sesuai format yang dibutuhkan layer input model LSTM.
 def build_input_sequence(scaled_features: np.ndarray, lookback: int = LOOKBACK) -> np.ndarray:
     """Reshape (lookback, n_features) -> (1, lookback, n_features)."""
     if scaled_features.shape[0] != lookback:

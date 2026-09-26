@@ -1,9 +1,10 @@
 """
-Streamlit Presentation Layer — Sistem Penilaian Risiko Banjir Kota Padang
+Streamlit Presentation Layer — Padang City Flood Risk Assessment System
 Single-page design with live progress tracking.
-Core pipeline (src/) adalah IMMUTABLE. File ini hanya presentation layer.
+Core pipeline (src/) is IMMUTABLE. This file is presentation layer only.
 """
 
+# Import main Streamlit module and data/thread handling utilities
 import streamlit as st
 import pandas as pd
 import sys
@@ -13,18 +14,23 @@ import time
 import threading
 import queue
 
-# Workspace root in path
+# Add project root directory to sys.path to access src and config modules
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Reference: `src/pipeline.py` → `predict_for_date()`
+# Connect user interface (dashboard) to the main entry point of the inference pipeline orchestrating data retrieval to model call.
 from src.pipeline import predict_for_date
+
+# Reference: `config/settings.py` → `CLASS_NAMES`
+# Import 4 flood risk classification category labels ("Rendah", "Sedang", "Tinggi", "Sangat Tinggi") per model contract.
 from config.settings import CLASS_NAMES
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PAGE CONFIG
+# PAGE CONFIG - Set layout configuration and Streamlit interface title
 # ─────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Sistem Penilaian Risiko Banjir Kota Padang",
-    page_icon="🌊",
+    page_title="AetherSense | Flood Risk Assessment System",
+    page_icon="assets/favicon.png",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -34,14 +40,22 @@ st.set_page_config(
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/cal-sans/index.css');
+
+@font-face {
+    font-family: 'Cal Sans';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 400 800;
+    src: url('https://cdn.jsdelivr.net/npm/@fontsource/cal-sans/files/cal-sans-latin-400-normal.woff2') format('woff2');
+}
 
 /* ── Base Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 
-html, body, .stApp, [class*="css"] {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+html, body, .stApp {
+    font-family: 'Cal Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
     background: #f8f8f7 !important;
     color: #111 !important;
 }
@@ -95,13 +109,39 @@ section[data-testid="stSidebar"] { display: none !important; }
         padding: 0 24px;
     }
 }
+.nav-brand-wrap, .nav-brand-wrap:hover, .nav-brand-wrap:focus, .nav-brand-wrap:active, .nav-brand-wrap * {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+.nav-logo-img {
+    height: 26px;
+    width: 26px;
+    object-fit: contain;
+    border-radius: 4px;
+}
 .nav-brand {
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #111 !important;
+    text-decoration: none !important;
+}
+.nav-brand-dot {
+    font-size: 0.8rem;
+    color: #ccc;
+    margin: 0 2px;
+}
+.nav-brand-sub {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: #888;
     text-transform: uppercase;
-    color: #111;
-    text-decoration: none;
 }
 .nav-links {
     display: flex;
@@ -136,22 +176,42 @@ section[data-testid="stSidebar"] { display: none !important; }
 }
 
 /* ── Hero ── */
-.hero-wrap { min-height: calc(100vh - 58px); display: flex; flex-direction: column; justify-content: center; }
+.hero-section {
+    padding-top: 18px !important;
+    padding-bottom: 24px !important;
+}
+.hero-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0;
+}
+.hero-logo-img {
+    width: 84px;
+    height: 84px;
+    object-fit: contain;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    display: block;
+}
 .hero-eyebrow {
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: 0.72rem;
+    font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #999;
-    margin-bottom: 28px;
+    color: #0284c7;
+    margin-bottom: 12px;
+    line-height: 1;
 }
 .hero-title {
-    font-size: clamp(3rem, 6.5vw, 5.5rem);
+    font-size: clamp(2.4rem, 5vw, 4rem);
     font-weight: 800;
-    line-height: 1.04;
-    letter-spacing: -0.04em;
+    line-height: 1.08;
+    letter-spacing: -0.035em;
     color: #0d0d0d;
-    margin-bottom: 32px;
+    max-width: 800px;
+    margin-bottom: 22px;
 }
 .prediction-note {
     margin-top: 5px;
@@ -164,44 +224,57 @@ section[data-testid="stSidebar"] { display: none !important; }
 }
 .hero-title em { font-style: normal; color: #666; }
 .hero-body {
-    font-size: 1rem;
-    line-height: 1.75;
-    color: #555;
-    max-width: 520px;
-    margin-bottom: 52px;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: #4b5563;
+    max-width: 680px;
+    margin-bottom: 46px;
     font-weight: 400;
 }
 .hero-cta {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    gap: 12px;
+    width: fit-content;
+    min-width: 240px;
+    max-width: 280px;
+    align-self: flex-start;
     background: #0d0d0d;
-    color: #fff !important;
+    color: #ffffff !important;
     text-decoration: none !important;
-    padding: 15px 36px;
-    border-radius: 3px;
+    padding: 14px 28px;
+    border-radius: 4px;
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     transition: background 0.2s, transform 0.15s;
+    box-sizing: border-box;
 }
-.hero-cta:hover { background: #2a2a2a; transform: translateY(-1px); }
+.hero-cta:hover {
+    background: #2a2a2a;
+    transform: translateY(-1px);
+}
 .hero-stats {
+ 
+    width: 100%;
+    align-self: stretch;
     display: flex;
     gap: 0;
     border-top: 1px solid #e4e4e0;
-    margin-top: 80px;
+    margin-top: 56px;
     padding-top: 0;
 }
 .hero-stat {
+    
     flex: 1;
-    padding: 28px 0;
+    padding: 26px 0;
     border-right: 1px solid #e4e4e0;
 }
 .hero-stat:last-child { border-right: none; }
 .hero-stat-val {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-weight: 700;
     letter-spacing: -0.02em;
     color: #0d0d0d;
@@ -268,7 +341,7 @@ div.stDownloadButton > button {
     border: 1px solid #0d0d0d !important;
     border-radius: 3px !important;
     padding: 13px 32px !important;
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-family: 'Cal Sans', sans-serif !important;
     font-size: 0.8rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.08em !important;
@@ -461,7 +534,6 @@ div[data-testid="stExpander"] details summary svg {
     border: 1px solid #e4e4e0;
     border-radius: 4px;
     padding: 14px 16px;
-    background: #fff;
 }
 .idx-lbl {
     font-size: 0.62rem;
@@ -483,7 +555,7 @@ div[data-testid="stExpander"] details summary svg {
     font-style: italic;
 }
 
-/* ── Riwayat ── */
+/* ── History ── */
 .empty-state {
     border: 1px dashed #ddd;
     border-radius: 6px;
@@ -494,83 +566,319 @@ div[data-testid="stExpander"] details summary svg {
     letter-spacing: 0.02em;
 }
 
-/* ── About ── */
-.about-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 48px 64px;
+/* ── About Section ── */
+.about-desc {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #4b5563;
+    max-width: 760px;
+    margin-bottom: 0;
 }
-.about-block {}
-.about-block-title {
+.about-divider {
+    border: none;
+    border-top: 1px solid #e8e8e4;
+    margin: 36px 0;
+}
+.about-section-label {
     font-size: 0.7rem;
     font-weight: 700;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 18px;
+}
+
+/* 01 How It Works Grid */
+.about-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+@media (max-width: 768px) {
+    .about-steps-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+.about-step-card {
+    border: 1px solid #e8e8e4;
+    border-radius: 8px;
+    padding: 24px 22px;
+    display: flex;
+    flex-direction: column;
+}
+.about-step-idx {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: #0284c7;
+    margin-bottom: 8px;
+}
+.about-step-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+}
+.about-step-desc {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: #555;
+    margin: 0;
+}
+
+/* 02 Model Inputs Grid */
+.about-inputs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+@media (max-width: 768px) {
+    .about-inputs-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+.about-input-card {
+    border: 1px solid #e8e8e4;
+    border-radius: 8px;
+    padding: 24px 24px;
+}
+.about-input-header {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: #555;
     padding-bottom: 12px;
-    border-bottom: 1px solid #e4e4e0;
-    margin-bottom: 16px;
+    border-bottom: 1px solid #f0f0ec;
+    margin-bottom: 12px;
 }
-.about-list { list-style: none; padding: 0; }
-.about-list li {
-    font-size: 0.85rem;
-    line-height: 1.65;
-    color: #555;
-    padding: 7px 0;
-    border-bottom: 1px solid #f5f5f3;
+.about-var-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.about-var-item {
+    font-size: 0.86rem;
+    line-height: 1.6;
+    padding: 8px 0;
+    border-bottom: 1px solid #fbfbfa;
     display: flex;
-    gap: 12px;
+    gap: 10px;
     align-items: baseline;
 }
-.about-list li::before {
-    content: '';
-    flex-shrink: 0;
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: #ccc;
-    margin-top: 9px;
+.about-var-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.about-var-code {
+    font-weight: 700;
+    color: #111;
+    min-width: 64px;
+}
+.about-var-sep {
+    color: #ccc;
+}
+.about-var-name {
+    color: #4b5563;
+}
+
+/* 03 Data Sources Grid */
+.about-sources-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+@media (max-width: 768px) {
+    .about-sources-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+.about-source-card {
+    border: 1px solid #e8e8e4;
+    border-radius: 8px;
+    padding: 22px 22px;
+}
+.about-source-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+}
+.about-source-desc {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: #555;
+    margin: 0;
+}
+
+/* 04 Model Grid */
+.about-model-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+@media (max-width: 768px) {
+    .about-model-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+.about-model-card {
+    border: 1px solid #e8e8e4;
+    border-radius: 8px;
+    padding: 22px 22px;
+}
+.about-spec-lbl {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 8px;
+}
+.about-spec-val {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: -0.01em;
+}
+
+/* 05 Technical Details */
+.about-tech-details {
+    margin-top: 36px;
+    border: 1px solid #e8e8e4;
+    border-radius: 8px;
+    background: #ffffff;
+    overflow: hidden;
+}
+.about-tech-summary {
+    padding: 14px 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #666;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s, background 0.15s;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.about-tech-summary::-webkit-details-marker {
+    display: none;
+}
+.about-tech-summary::marker {
+    display: none;
+    content: "";
+}
+.about-tech-summary:hover {
+    color: #111;
+    background: #fafaf9;
+}
+.about-tech-toggle {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: #888;
+    transition: transform 0.2s ease, color 0.2s ease;
+    line-height: 1;
+}
+.about-tech-details[open] .about-tech-toggle {
+    transform: rotate(45deg);
+    color: #111;
+}
+.about-tech-content {
+    padding: 22px 24px;
+    border-top: 1px solid #f0f0ec;
+    background: #ffffff;
+}
+.about-tech-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px 32px;
+}
+@media (max-width: 768px) {
+    .about-tech-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+.about-tech-col {}
+.about-tech-lbl {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 4px;
+}
+.about-tech-val {
+    font-size: 0.83rem;
+    line-height: 1.6;
+    color: #555;
+}
+.about-tech-val code {
+    font-size: 0.78rem;
+    background: #f4f4f2;
+    padding: 2px 5px;
+    border-radius: 3px;
+    color: #111;
 }
 
 /* ── Misc ── */
 .stSpinner > div > div { border-top-color: #111 !important; }
 .stAlert { border-radius: 4px !important; font-size: 0.875rem !important; }
 div[data-testid="stDataFrame"] { border: 1px solid #e4e4e0 !important; border-radius: 4px !important; }
+input, select, textarea, .stMarkdown, .stAlert, div[data-baseweb], div[data-testid="stDataFrame"] {
+    font-family: 'Cal Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SESSION STATE
+# SESSION STATE - Persist application state across Streamlit reruns
 # ─────────────────────────────────────────────────────────────────────────────
 defaults = {
-    "running": False,
-    "result": None,
-    "target_date": None,
-    "history": [],
-    "csv_path": None,
+    "running": False,      # Flag indicating whether inference process is running in background thread
+    "result": None,        # Store dict of inference results (SUCCESS/REJECTED status, predicted class name, probabilities)
+    "target_date": None,   # Store target date string selected by user ("YYYY-MM-DD") as reference window D-7..D-1
+    "history": [],         # Store search history with SUCCESS status during active session
+    "csv_path": None,      # Store CSV path of processed 7-day features (`inference_features_{target_date}.csv`) for download
 }
 for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PIPELINE STAGE DEFINITIONS
+# PIPELINE STAGE DEFINITIONS - 7 stages of inference displayed on progress tracker UI
+# Reference: `src/pipeline.py` → log stages `[1/7]` to `[7/7]` in `predict_for_date()`
 # ─────────────────────────────────────────────────────────────────────────────
 PIPELINE_STAGES = [
-    {"key": "[1/7]", "label": "Mengambil data cuaca permukaan"},
-    {"key": "[2/7]", "label": "Mengambil data atmosfer"},
-    {"key": "[3/7]", "label": "Menghitung indeks atmosfer"},
-    {"key": "[4/7]", "label": "Menggabungkan data"},
-    {"key": "[5/7]", "label": "Menyiapkan data untuk prediksi"},
-    {"key": "[6/7]", "label": "Memeriksa kelengkapan data 7 hari"},
-    {"key": "[7/7]", "label": "Menjalankan model prediksi"},
+    {"key": "[1/7]", "label": "Fetching surface weather data"},       # Reference: `src/ogimet.py` → `get_ogimet_daily()`
+    {"key": "[2/7]", "label": "Fetching atmospheric data"},           # Reference: `src/wyoming.py` & `src/sounding.py`
+    {"key": "[3/7]", "label": "Computing atmospheric indices"},       # Reference: `src/atmospheric_indices.py` → `compute_indices_for_sounding()`
+    {"key": "[4/7]", "label": "Integrating data"},                    # Reference: `src/integration.py` → `integrate()`
+    {"key": "[5/7]", "label": "Preparing data for prediction"},       # Reference: `src/preprocessing.py` → `apply_stage7_missing_value_handling()`
+    {"key": "[6/7]", "label": "Checking 7-day data completeness"},    # Reference: `src/pipeline.py` → `_run_validation_gate()` & `src/sequence.py`
+    {"key": "[7/7]", "label": "Running prediction model"},           # Reference: `src/predictor.py` → `predict()`
 ]
 
+# Display translation map for internal risk class names
+RISK_DISPLAY_NAME = {
+    "Rendah": "Low",
+    "Sedang": "Moderate",
+    "Tinggi": "High",
+    "Sangat Tinggi": "Very High",
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
-# THREAD-SAFE STDOUT CAPTURE
-# Menggunakan thread-aware writer: hanya menulis ke queue untuk thread
-# inference, thread lain tetap menulis ke stdout asli.
-# Tidak menyentuh pipeline sama sekali — hanya membaca stdout-nya.
+# THREAD-SAFE STDOUT CAPTURE - Capture stdout logs from inference thread to update UI
 # ─────────────────────────────────────────────────────────────────────────────
 class ThreadAwareWriter:
     """Route writes from inference thread to queue; all others → original."""
@@ -597,6 +905,7 @@ class ThreadAwareWriter:
             pass
 
 
+# Worker Thread: Asynchronous connector between user interface (dashboard) and inference pipeline.
 def _inference_worker(target_date_str, result_ref, log_queue):
     """Run predict_for_date in a background thread."""
     try:
@@ -609,7 +918,7 @@ def _inference_worker(target_date_str, result_ref, log_queue):
             "reasons": [str(exc)],
         }
     finally:
-        log_queue.put(None)  # sentinel — signals completion
+        log_queue.put(None)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -679,7 +988,7 @@ def _fv(val, unit="", decimals=2):
 def _render_idx(val, unit="", decimals=2):
     v = _fv(val, unit, decimals)
     if v is None:
-        return '<span class="idx-na">tidak tersedia</span>'
+        return '<span class="idx-na">not available</span>'
     return f'<span class="idx-val">{v}</span>'
 
 
@@ -690,18 +999,32 @@ _RISK_CSS = {
     "Sangat Tinggi": "rc-sangat-tinggi",
 }
 
+# Encode logo as base64 for inline HTML rendering in navbar/hero
+import base64
+def _get_logo_base64():
+    logo_path = os.path.join(os.path.dirname(__file__), "assets", "aethersense_logo.png")
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+    return ""
+
+_LOGO_B64 = _get_logo_base64()
+
 # ─────────────────────────────────────────────────────────────────────────────
 # ── NAVBAR ──
 # ─────────────────────────────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(f"""
 <nav class="navbar">
     <div class="navbar-inner">
-        <span class="nav-brand">Flood Risk Assessment</span>
+        <a href="#home" class="nav-brand-wrap">
+            <img src="data:image/jpeg;base64,{_LOGO_B64}" class="nav-logo-img" alt="AetherSense Logo" />
+            <span class="nav-brand">AetherSense</span>
+        </a>
         <div class="nav-links">
-            <a href="#beranda">Beranda</a>
-            <a href="#prediksi">Prediksi</a>
-            <a href="#riwayat">Riwayat</a>
-            <a href="#tentang">Tentang</a>
+            <a href="#home">Home</a>
+            <a href="#prediction">Prediction</a>
+            <a href="#history">History</a>
+            <a href="#about">About</a>
         </div>
     </div>
 </nav>
@@ -709,39 +1032,40 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ── SECTION: BERANDA ──
+# ── SECTION: HOME ──
 # ─────────────────────────────────────────────────────────────────────────────
-st.markdown('<a id="beranda" style="display:block;position:relative;top:-58px;"></a>', unsafe_allow_html=True)
-st.markdown("""
-<div class="page-section">
+st.markdown('<a id="home" style="display:block;position:relative;top:-58px;"></a>', unsafe_allow_html=True)
+st.markdown(f"""
+<div class="page-section hero-section">
 <div class="page-section-inner">
 <div class="hero-wrap">
-    <div class="hero-eyebrow">Sistem Prediksi Risiko Banjir Kota Padang</div>
-    <h1 class="hero-title">Sistem Penilaian<br><em>Risiko Banjir</em></h1>
+    <img src="data:image/png;base64,{_LOGO_B64}" class="hero-logo-img" alt="AetherSense Logo" />
+    <div class="hero-eyebrow">AETHERSENSE</div>
+    <h1 class="hero-title">Flood Risk Assessment</h1>
     <p class="hero-body">
-        Prakiraan tingkat risiko banjir di Kota Padang untuk tanggal pilihan Anda, berdasarkan data cuaca dan kondisi atmosfer selama 7 hari terakhir.
+        Forecast flood risk levels in Padang City for your selected date, based on weather and atmospheric conditions over the past 7 days
     </p>
-    <a href="#prediksi" class="hero-cta">Mulai Prediksi &nbsp;→</a>
+    <a href="#prediction" class="hero-cta">START PREDICTION &nbsp;→</a>
     <div class="hero-stats">
         <div class="hero-stat">
             <div class="hero-stat-val">LSTM</div>
-            <div class="hero-stat-lbl">Metode Prediksi</div>
+            <div class="hero-stat-lbl">Prediction Method</div>
         </div>
         <div class="hero-stat" style="padding-left:32px;">
-            <div class="hero-stat-val">7 Hari</div>
-            <div class="hero-stat-lbl">Rentang Data yang Digunakan</div>
+            <div class="hero-stat-val">7 Days</div>
+            <div class="hero-stat-lbl">Data Range Used</div>
         </div>
         <div class="hero-stat" style="padding-left:32px;">
-            <div class="hero-stat-val">8 Variabel</div>
-            <div class="hero-stat-lbl">Variabel yang Dianalisis</div>
+            <div class="hero-stat-val">8 Variables</div>
+            <div class="hero-stat-lbl">Analyzed Variables</div>
         </div>
         <div class="hero-stat" style="padding-left:32px;">
-            <div class="hero-stat-val">4 Tingkat</div>
-            <div class="hero-stat-lbl">Tingkat Risiko</div>
+            <div class="hero-stat-val">4 Levels</div>
+            <div class="hero-stat-lbl">Risk Levels</div>
         </div>
         <div class="hero-stat" style="padding-left:32px;">
             <div class="hero-stat-val">Ogimet · Wyoming</div>
-            <div class="hero-stat-lbl">Sumber Data</div>
+            <div class="hero-stat-lbl">Data Sources</div>
         </div>
     </div>
 </div>
@@ -752,40 +1076,39 @@ st.markdown("""
 st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ── SECTION: PREDIKSI ──
+# ── SECTION: PREDICTION ──
 # ─────────────────────────────────────────────────────────────────────────────
-st.markdown('<a id="prediksi" style="display:block;position:relative;top:-58px;"></a>', unsafe_allow_html=True)
+st.markdown('<a id="prediction" style="display:block;position:relative;top:-58px;"></a>', unsafe_allow_html=True)
 st.markdown("""
 <div class="page-section">
 <div class="page-section-inner">
-    <div class="s-eyebrow">Prediksi</div>
-    <div class="s-title">Prediksi Risiko Banjir</div>
+    <div class="s-eyebrow">Prediction</div>
+    <div class="s-title">Flood Risk Prediction</div>
     <div class="s-body">
-       Pilih tanggal yang ingin diprediksi. Sistem akan otomatis mengambil data cuaca dan atmosfer 7 hari sebelumnya. Anda tidak perlu mengisi data apa pun secara manual.
+       Select the target date to predict. The system will automatically fetch weather and atmospheric data for the preceding 7 days. No manual data entry is required
     </div>
     <div class="prediction-note">
-        <strong>Catatan:</strong> Proses prediksi dapat membutuhkan waktu beberapa saat karena sistem perlu mengambil data atmosfer dari server eksternal.
+        <strong>Note:</strong> The prediction process may take a few moments as the system retrieves atmospheric data from external servers
     </div>
 """, unsafe_allow_html=True)
 
-# Form
+# Form Input Target Date
 col_input, col_pad = st.columns([2, 3])
 with col_input:
     target_date_widget = st.date_input(
-        "Tanggal Prediksi",
+        "Prediction Date",
         value=None,
         key="date_picker",
-        help="Sistem akan menggunakan data 7 hari sebelum tanggal ini untuk membuat prediksi.",
+        help="The system will use data from the 7 days prior to this date to make predictions",
     )
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
     submit_disabled = (target_date_widget is None) or st.session_state.running
     submit_clicked = st.button(
-        "Prediksi Sekarang",
+        "Predict Now",
         disabled=submit_disabled,
         key="btn_submit",
     )
 
-# Trigger: simpan tanggal dan rerun untuk masuk ke progress loop
 if submit_clicked and target_date_widget is not None:
     st.session_state.target_date = target_date_widget.strftime("%Y-%m-%d")
     st.session_state.running = True
@@ -793,42 +1116,36 @@ if submit_clicked and target_date_widget is not None:
     st.session_state.csv_path = None
     st.rerun()
 
-# ── LIVE PROGRESS ──
+# Real-time progress tracking
 if st.session_state.running and st.session_state.target_date:
     tgt = st.session_state.target_date
     st.markdown(
         f'<div style="margin-top:32px; font-size:0.7rem; font-weight:700; '
         f'letter-spacing:0.18em; text-transform:uppercase; color:#aaa;">'
-        f'Memproses Tanggal {tgt}</div>',
+        f'Processing Date {tgt}</div>',
         unsafe_allow_html=True,
     )
     tracker_ph = st.empty()
 
-    # Init statuses: stage 1 immediately 'running'
     statuses = [
         {"status": "running" if i == 0 else "pending", "elapsed": None}
         for i in range(len(PIPELINE_STAGES))
     ]
     tracker_ph.markdown(_render_tracker(statuses), unsafe_allow_html=True)
 
-    # Setup
     log_q: queue.Queue = queue.Queue()
     result_ref: dict = {"result": None}
     orig_stdout = sys.stdout
 
-    # Create thread (without starting yet so we can get ident after start)
     thread = threading.Thread(
         target=_inference_worker,
         args=(tgt, result_ref, log_q),
         daemon=True,
     )
 
-    # Install thread-aware writer BEFORE starting thread
-    # (Python GIL ensures this assignment is seen by the new thread)
     thread.start()
     sys.stdout = ThreadAwareWriter(orig_stdout, log_q, thread.ident)
 
-    # ── UPDATE LOOP ──
     done = False
     while not done:
         try:
@@ -846,17 +1163,14 @@ if st.session_state.running and st.session_state.target_date:
             tracker_ph.markdown(_render_tracker(statuses), unsafe_allow_html=True)
             time.sleep(0.2)
 
-    # Restore stdout
     sys.stdout = orig_stdout
     thread.join(timeout=10)
 
-    # Finalize: mark any lingering 'running' as done
     for s in statuses:
         if s["status"] == "running":
             s["status"] = "done"
     tracker_ph.markdown(_render_tracker(statuses), unsafe_allow_html=True)
 
-    # Persist result to session state
     final_result = result_ref["result"]
     st.session_state.result = final_result
     st.session_state.running = False
@@ -865,51 +1179,52 @@ if st.session_state.running and st.session_state.target_date:
     if os.path.exists(csv_candidate):
         st.session_state.csv_path = csv_candidate
 
-    # Add to history (avoid duplicates)
     if final_result and final_result.get("status") == "SUCCESS":
         probs = final_result.get("probabilities", {})
+        internal_pred = final_result.get("predicted_class_name", "-")
+        disp_pred = RISK_DISPLAY_NAME.get(internal_pred, internal_pred)
         entry = {
-            "Tanggal": tgt,
-            "Prediksi": final_result.get("predicted_class_name", "-"),
-            "Rendah %": f"{probs.get('Rendah', 0)*100:.1f}",
-            "Sedang %": f"{probs.get('Sedang', 0)*100:.1f}",
-            "Tinggi %": f"{probs.get('Tinggi', 0)*100:.1f}",
-            "Sangat Tinggi %": f"{probs.get('Sangat Tinggi', 0)*100:.1f}",
+            "Date": tgt,
+            "Prediction": disp_pred,
+            "Low %": f"{probs.get('Rendah', 0)*100:.1f}",
+            "Moderate %": f"{probs.get('Sedang', 0)*100:.1f}",
+            "High %": f"{probs.get('Tinggi', 0)*100:.1f}",
+            "Very High %": f"{probs.get('Sangat Tinggi', 0)*100:.1f}",
         }
-        if not any(h["Tanggal"] == tgt for h in st.session_state.history):
+        if not any(h["Date"] == tgt for h in st.session_state.history):
             st.session_state.history.insert(0, entry)
 
-# ── RESULTS ──
+# Render Prediction Results
 if st.session_state.result and not st.session_state.running:
     res = st.session_state.result
     tgt_date = res.get("target_date", "")
 
     if res.get("status") == "SUCCESS":
         pred = res.get("predicted_class_name", "")
+        disp_pred = RISK_DISPLAY_NAME.get(pred, pred)
         rc = _RISK_CSS.get(pred, "rc-rendah")
         probs = res.get("probabilities", {})
 
         st.markdown(f"""
         <div class="result-wrap">
-            <div class="result-eyebrow">Hasil Prediksi untuk {tgt_date}</div>
-            <div class="result-class {rc}">{pred}</div>
+            <div class="result-eyebrow">Prediction Result for {tgt_date}</div>
+            <div class="result-class {rc}">{disp_pred}</div>
         </div>
         """, unsafe_allow_html=True)
 
-        # Probability cards
         cards_html = ""
         for cls in CLASS_NAMES:
             p = probs.get(cls, 0.0)
             is_active = "active" if cls == pred else ""
+            disp_cls = RISK_DISPLAY_NAME.get(cls, cls)
             cards_html += f"""
             <div class="prob-card {is_active}">
-                <div class="prob-card-lbl">{cls}</div>
+                <div class="prob-card-lbl">{disp_cls}</div>
                 <div class="prob-card-val">{p*100:.1f}%</div>
                 <div class="pbar-bg"><div class="pbar-fill" style="width:{p*100:.1f}%"></div></div>
             </div>"""
         st.markdown(f'<div class="prob-grid">{cards_html}</div>', unsafe_allow_html=True)
 
-        # Atmospheric indices from generated CSV
         csv_path = st.session_state.csv_path
         df_feat = None
         if csv_path and os.path.exists(csv_path):
@@ -923,21 +1238,21 @@ if st.session_state.result and not st.session_state.running:
             d1 = str(last.get("date", "D-1"))
 
             st.markdown(
-                f'<div class="indices-label">Kondisi Atmosfer Terakhir yang Digunakan ({d1})</div>',
+                f'<div class="indices-label">Latest Atmospheric Conditions Used ({d1})</div>',
                 unsafe_allow_html=True,
             )
             st.markdown(f"""
             <div class="indices-grid">
                 <div class="idx-card">
-                    <div class="idx-lbl">Curah Hujan</div>
+                    <div class="idx-lbl">Rainfall</div>
                     {_render_idx(last.get('rr'), ' mm')}
                 </div>
                 <div class="idx-card">
-                    <div class="idx-lbl">Suhu Udara Rata-rata</div>
+                    <div class="idx-lbl">Average Air Temperature</div>
                     {_render_idx(last.get('tavg'), ' °C')}
                 </div>
                 <div class="idx-card">
-                    <div class="idx-lbl">Kelembapan Udara</div>
+                    <div class="idx-lbl">Relative Humidity</div>
                     {_render_idx(last.get('rh'), ' %')}
                 </div>
                 <div class="idx-card">
@@ -963,50 +1278,49 @@ if st.session_state.result and not st.session_state.running:
             </div>
             """, unsafe_allow_html=True)
 
-            with st.expander("Lihat Data 7 Hari Terakhir yang Digunakan"):
+            with st.expander("View Data from Last 7 Days Used"):
                 st.dataframe(df_feat, use_container_width=True, hide_index=True)
 
             col_dl, _ = st.columns([1, 3])
             with col_dl:
                 with open(csv_path, "rb") as fh:
                     st.download_button(
-                        "Unduh CSV",
+                        "Download CSV",
                         data=fh,
                         file_name=f"features_{tgt_date}.csv",
                         mime="text/csv",
                     )
         else:
-            st.info("Detail parameter atmosfer tidak tersedia untuk tanggal ini).")
+            st.info("Atmospheric parameter details are not available for this date")
 
     else:
-        reasons = res.get("reasons", ["Alasan tidak diketahui."])
-        st.error("Prediksi tidak dapat dilakukan untuk tanggal ini:")
+        reasons = res.get("reasons", ["Unknown reason."])
+        st.error("Prediction cannot be performed for this date:")
         for r in reasons:
             st.markdown(f"<small>• {r}</small>", unsafe_allow_html=True)
 
     st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
     col_reset, _ = st.columns([1, 4])
     with col_reset:
-        if st.button("Coba Tanggal Lain", key="btn_reset"):
+        if st.button("Try Another Date", key="btn_reset"):
             st.session_state.result = None
             st.session_state.target_date = None
             st.session_state.csv_path = None
             st.rerun()
 
-# Close prediksi section div
 st.markdown("</div></div>", unsafe_allow_html=True)
 st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ── SECTION: RIWAYAT ──
+# ── SECTION: HISTORY ──
 # ─────────────────────────────────────────────────────────────────────────────
-st.markdown('<a id="riwayat" style="display:block;position:relative;top:-58px;"></a>', unsafe_allow_html=True)
+st.markdown('<a id="history" style="display:block;position:relative;top:-58px;"></a>', unsafe_allow_html=True)
 st.markdown("""
 <div class="page-section">
 <div class="page-section-inner">
-    <div class="s-eyebrow">Riwayat</div>
-    <div class="s-title">Riwayat Prediksi</div>
-    <div class="s-body">Daftar prediksi yang sudah Anda lihat selama kunjungan ini. Riwayat akan hilang jika halaman ditutup atau dimuat ulang.</div>
+    <div class="s-eyebrow">History</div>
+    <div class="s-title">Prediction History</div>
+    <div class="s-body">List of predictions viewed during this session. History will reset if the page is closed or refreshed</div>
 """, unsafe_allow_html=True)
 
 hist = st.session_state.history
@@ -1014,7 +1328,7 @@ if hist:
     st.dataframe(pd.DataFrame(hist), use_container_width=True, hide_index=True)
 else:
     st.markdown(
-        '<div class="empty-state">Belum ada prediksi yang dilakukan. Pilih tanggal di atas untuk memulai.</div>',
+        '<div class="empty-state">No predictions performed yet. Select a date above to start.</div>',
         unsafe_allow_html=True,
     )
 
@@ -1022,63 +1336,145 @@ st.markdown("</div></div>", unsafe_allow_html=True)
 st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ── SECTION: TENTANG ──
+# ── SECTION: ABOUT ──
 # ─────────────────────────────────────────────────────────────────────────────
-st.markdown('<a id="tentang" style="display:block;position:relative;top:-58px;"></a>', unsafe_allow_html=True)
+st.markdown('<a id="about" style="display:block;position:relative;top:-58px;"></a>', unsafe_allow_html=True)
 st.markdown("""
 <div class="page-section">
 <div class="page-section-inner">
-    <div class="s-eyebrow">Tentang</div>
-    <div class="s-title">Metodologi Sistem</div>
-    <div class="s-body">
-       Sistem ini bekerja melalui tiga tahap utama: pengumpulan dan penggabungan data, pengolahan data hingga menghasilkan prediksi, serta penyajian hasil kepada pengguna melalui halaman yang sedang Anda gunakan ini.
-    </div>
-    <div class="about-grid">
-        <div class="about-block">
-            <div class="about-block-title">Tahapan Proses Prediksi</div>
-            <ul class="about-list">
-                <li>Mengambil data cuaca harian dari Ogimet (curah hujan, suhu udara, kelembapan)</li>
-                <li>Mengambil data atmosfer atas dari Wyoming Upper Air (pengukuran pukul 12.00 dan 00.00 UTC)</li>
-                <li>Menghitung indeks atmosfer menggunakan SounderPy dan SHARPpy</li>
-                <li>Menggabungkan seluruh data ke dalam satu susunan harian yang berurutan</li>
-                <li>Membersihkan dan melengkapi data yang kosong menggunakan nilai tengah (median) bulanan</li>
-                <li>Menyusun data 7 hari terakhir dan memeriksa kelayakannya melalui validation gate</li>
-                <li>Menjalankan model LSTM untuk menentukan kategori risiko banjir yang paling mungkin terjadi</li>
-            </ul>
-        </div>
-        <div class="about-block">
-            <div class="about-block-title">Variabel yang Digunakan Model (8 Variabel)</div>
-            <ul class="about-list">
-                <li>Curah Hujan Harian (mm)</li>
-                <li>Suhu Udara Rata-rata (°C)</li>
-                <li>Kelembapan Relatif (%)</li>
-                <li>CIN — Convective Inhibition (J/kg)</li>
-                <li>K-Index</li>
-                <li>Lifted Index (LI)</li>
-                <li>Total Totals Index (TT)</li>
-                <li>SWEAT Index</li>
-            </ul>
-        </div>
-        <div class="about-block">
-            <div class="about-block-title">Sumber Data</div>
-            <ul class="about-list">
-                <li>Ogimet — data permukaan harian BMKG Stasiun 96163</li>
-                <li>Wyoming Upper Air — data sounding atmosfer pukul 12.00 dan 00.00 UTC</li>
-                <li>SounderPy dan SHARPpy — digunakan untuk mengolah data sounding menjadi indeks atmosfer</li>
-                <li>Data historis tahun 2018–2024</li>
-            </ul>
-        </div>
-        <div class="about-block">
-            <div class="about-block-title">Spesifikasi Model</div>
-            <ul class="about-list">
-                <li>Arsitektur: LSTM berlapis (multi-layer), dengan 4 kategori keluaran</li>
-                <li>Kategori hasil prediksi: Rendah · Sedang · Tinggi · Sangat Tinggi</li>
-                <li>Rentang data yang digunakan: 7 hari sebelum tanggal prediksi</li>
-                <li>Normalisasi data: menggunakan MinMaxScaler, dengan parameter yang dihitung sekali saat pelatihan model dan diterapkan secara konsisten pada setiap prediksi baru.</li>
-                <li>Format penyimpanan model: Keras (.keras)</li>
-            </ul>
-        </div>
-    </div>
+<div class="s-eyebrow">About</div>
+<div class="s-title">What is AetherSense?</div>
+<p class="about-desc">
+AetherSense is an atmospheric-based flood risk assessment system developed for Padang City. It evaluates localized flood vulnerability by analyzing multi-day surface meteorological observations alongside upper-air thermodynamic instability indices to provide automated, data-driven classifications
+</p>
+<hr class="about-divider">
+<div class="about-section-label">How It Works</div>
+<div class="about-steps-grid">
+<div class="about-step-card">
+<div class="about-step-idx">01</div>
+<div class="about-step-title">Data Collection</div>
+<p class="about-step-desc">Surface weather and upper-air observations</p>
+</div>
+<div class="about-step-card">
+<div class="about-step-idx">02</div>
+<div class="about-step-title">Atmospheric Processing</div>
+<p class="about-step-desc">Atmospheric indices and the 7-day input sequence are prepared</p>
+</div>
+<div class="about-step-card">
+<div class="about-step-idx">03</div>
+<div class="about-step-title">Risk Assessment</div>
+<p class="about-step-desc">The LSTM model generates the flood-risk classification</p>
+</div>
+</div>
+<hr class="about-divider">
+<div class="about-section-label">Model Inputs</div>
+<div class="about-inputs-grid">
+<div class="about-input-card">
+<div class="about-input-header">Surface Weather</div>
+<ul class="about-var-list">
+<li class="about-var-item">
+<span class="about-var-code">RR</span>
+<span class="about-var-sep">—</span>
+<span class="about-var-name">Daily Rainfall</span>
+</li>
+<li class="about-var-item">
+<span class="about-var-code">Tavg</span>
+<span class="about-var-sep">—</span>
+<span class="about-var-name">Average Air Temperature</span>
+</li>
+<li class="about-var-item">
+<span class="about-var-code">RH</span>
+<span class="about-var-sep">—</span>
+<span class="about-var-name">Relative Humidity</span>
+</li>
+</ul>
+</div>
+<div class="about-input-card">
+<div class="about-input-header">Atmospheric Indices</div>
+<ul class="about-var-list">
+<li class="about-var-item">
+<span class="about-var-code">CIN</span>
+<span class="about-var-sep">—</span>
+<span class="about-var-name">Convective Inhibition</span>
+</li>
+<li class="about-var-item">
+<span class="about-var-code">K-Index</span>
+<span class="about-var-sep">—</span>
+<span class="about-var-name">K-Index</span>
+</li>
+<li class="about-var-item">
+<span class="about-var-code">LI</span>
+<span class="about-var-sep">—</span>
+<span class="about-var-name">Lifted Index</span>
+</li>
+<li class="about-var-item">
+<span class="about-var-code">TT</span>
+<span class="about-var-sep">—</span>
+<span class="about-var-name">Total Totals Index</span>
+</li>
+<li class="about-var-item">
+<span class="about-var-code">SWEAT</span>
+<span class="about-var-sep">—</span>
+<span class="about-var-name">SWEAT Index</span>
+</li>
+</ul>
+</div>
+</div>
+<hr class="about-divider">
+<div class="about-section-label">Data Sources</div>
+<div class="about-sources-grid">
+<div class="about-source-card">
+<div class="about-source-name">Ogimet</div>
+<p class="about-source-desc">Daily surface weather observations</p>
+</div>
+<div class="about-source-card">
+<div class="about-source-name">Wyoming Upper Air</div>
+<p class="about-source-desc">Upper-air sounding observations</p>
+</div>
+<div class="about-source-card">
+<div class="about-source-name">SounderPy</div>
+<p class="about-source-desc">Atmospheric index processing</p>
+</div>
+</div>
+<hr class="about-divider">
+<div class="about-section-label">Model</div>
+<div class="about-model-grid">
+<div class="about-model-card">
+<div class="about-spec-lbl">Architecture</div>
+<div class="about-spec-val">Multi-layer LSTM</div>
+</div>
+<div class="about-model-card">
+<div class="about-spec-lbl">Input Window</div>
+<div class="about-spec-val">7 Days</div>
+</div>
+<div class="about-model-card">
+<div class="about-spec-lbl">Risk Categories</div>
+<div class="about-spec-val">Low · Moderate · High · Very High</div>
+</div>
+</div>
+<details class="about-tech-details">
+<summary class="about-tech-summary"><span>Technical Details</span><span class="about-tech-toggle">+</span></summary>
+<div class="about-tech-content">
+<div class="about-tech-grid">
+<div class="about-tech-col">
+<div class="about-tech-lbl">Historical Dataset</div>
+<div class="about-tech-val">Longitudinal meteorological observations spanning 2017–2024 from BMKG Minangkabau Station (WMO ID 96163)</div>
+</div>
+<div class="about-tech-col">
+<div class="about-tech-lbl">SHARPpy Integration</div>
+<div class="about-tech-val">SounderPy delegates upper-air stability parameters (LI, TT, K-Index, SWEAT) directly to internal SHARPpy calculation modules (<code>sounderpy.SHARPPYMAIN</code>)</div>
+</div>
+<div class="about-tech-col">
+<div class="about-tech-lbl">Preprocessing & Imputation</div>
+<div class="about-tech-val">Surface metrics apply calendar-aware continuity, missing sounding indices are imputed using 2017–2024 calendar-month medians</div>
+</div>
+<div class="about-tech-col">
+<div class="about-tech-lbl">Scaling & Serialization</div>
+<div class="about-tech-val">Trained <code>MinMaxScaler</code> applied to 8-variable sequences across the 7-day look-back window, executed via Keras (<code>model_final_4_class.keras</code>)</div>
+</div>
+</div>
+</div>
+</details>
 </div>
 </div>
 """, unsafe_allow_html=True)
@@ -1087,7 +1483,7 @@ st.markdown("""
 st.markdown("""
 <div style="border-top:1px solid #e4e4e0; padding:32px 64px; display:flex; justify-content:space-between; align-items:center;">
     <span style="font-size:0.7rem; color:#bbb; letter-spacing:0.1em; text-transform:uppercase;">
-        Sistem Penilaian Risiko Banjir Kota Padang
+        AetherSense — Flood Risk Assessment System
     </span>
     <span style="font-size:0.7rem; color:#bbb; letter-spacing:0.06em;">
         © 2026 Imam. All rights reserved.

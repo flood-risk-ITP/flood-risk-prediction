@@ -13,6 +13,7 @@ import pandas as pd
 from src.calendar_utils import build_master_calendar
 
 
+# Menggabungkan data permukaan Ogimet dan data atmosfer Sounding ke dalam backbone kalender harian (LEFT JOIN pada kolom 'date') untuk membentuk dataset harian utuh.
 def integrate(
     ogimet_df: pd.DataFrame,
     sounding_df: pd.DataFrame,
@@ -30,6 +31,7 @@ def integrate(
     sounding_df : DataFrame dengan kolom date, selection_status,
         selected_hour, cin, kindex, li, tt, sweat
     """
+    # Membentuk kerangka kalender harian lengkap (backbone) sebagai acuan tanggal berurutan.
     backbone = pd.DataFrame({
         "date": build_master_calendar(start_date, end_date),
     })
@@ -40,9 +42,11 @@ def integrate(
     sounding_df = sounding_df.copy()
     sounding_df["date"] = pd.to_datetime(sounding_df["date"]).dt.normalize()
 
+    # Menggabungkan data permukaan dan data atmosfer ke backbone kalender via LEFT JOIN agar tidak ada tanggal yang terlewat.
     merged = backbone.merge(ogimet_df, on="date", how="left")
     merged = merged.merge(sounding_df, on="date", how="left")
 
+    # Memastikan jumlah baris hasil gabungan sama persis dengan jumlah hari pada backbone kalender.
     if len(merged) != len(backbone):
         raise AssertionError(
             "Integrasi Stage 5 menghasilkan jumlah baris berbeda dari backbone "

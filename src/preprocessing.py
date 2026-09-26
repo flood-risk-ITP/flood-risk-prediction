@@ -41,6 +41,7 @@ from config.settings import (
 )
 
 
+# Memuat data median bulanan (1-12) untuk 5 indeks atmosfer yang diambil dari konfigurasi Stage 7.
 def load_monthly_medians(path: str = STAGE7_MEDIANS_PATH) -> dict:
     """Baca config/stage7_monthly_medians.json. Key bulan pada file adalah
     string "1".."12"; dikonversi ke int di sini untuk kemudahan lookup."""
@@ -50,6 +51,7 @@ def load_monthly_medians(path: str = STAGE7_MEDIANS_PATH) -> dict:
     return {int(month_str): values for month_str, values in monthly.items()}
 
 
+# Mengisi nilai hilang pada variabel permukaan Ogimet (rr, tavg, rh) menggunakan interpolasi berbasis waktu harian.
 def _interpolate_ogimet(df: pd.DataFrame) -> pd.DataFrame:
     """Identik dengan Stage 7: interpolate(method="time", limit_direction="both")
     per kolom Ogimet, pada index tanggal."""
@@ -60,6 +62,7 @@ def _interpolate_ogimet(df: pd.DataFrame) -> pd.DataFrame:
     return indexed.reset_index()
 
 
+# Mengisi nilai hilang pada 5 indeks atmosfer (cin, kindex, li, tt, sweat) menggunakan nilai median bulanan spesifik, HANYA untuk tanggal berstatus SELECTED.
 def _impute_sounding_medians(df: pd.DataFrame, monthly_medians: dict) -> pd.DataFrame:
     """Isi median bulanan HANYA pada baris selection_status == SELECTED.
     Baris NO_SOUNDING dibiarkan NaN (tidak disentuh)."""
@@ -77,6 +80,7 @@ def _impute_sounding_medians(df: pd.DataFrame, monthly_medians: dict) -> pd.Data
     return df
 
 
+# Menjalankan alur pembersihan dan penanganan data hilang lengkap (Stage 7): interpolasi Ogimet diikuti imputasi median bulanan Sounding.
 def apply_stage7_missing_value_handling(
     df: pd.DataFrame, monthly_medians: Optional[dict] = None
 ) -> pd.DataFrame:

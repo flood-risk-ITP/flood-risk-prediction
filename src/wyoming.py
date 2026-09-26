@@ -94,6 +94,7 @@ def _compute_backoff(attempt: int, base: float) -> float:
     return base * (2 ** (attempt - 1))
 
 
+# Mengunduh data sounding mentah dari server Wyoming Upper Air untuk kombinasi tanggal, jam, dan sumber data tertentu (disertai retry & backoff).
 def download_single_sounding(
     date_str: str, hour_str: str, src: Optional[str], session: requests.Session
 ):
@@ -257,6 +258,7 @@ def _try_hour_cached(
     return result, messages
 
 
+# Mengatur strategi unduh per-tanggal: mencoba jam 12Z terlebih dahulu, jika gagal mencoba 00Z, dan menetapkan NO_SOUNDING jika keduanya tidak ada.
 def process_date(date_str: str, session: requests.Session) -> SoundingResult:
     """Identik dengan wyouming_downloader.py::process_date, ditambah status
     akhir `NO_SOUNDING` (bukan `MISSING`/`FAILED`) untuk konsistensi
@@ -283,6 +285,7 @@ def process_date(date_str: str, session: requests.Session) -> SoundingResult:
     )
 
 
+# Mengambil profil sounding untuk satu tanggal tertentu dengan memanfaatkan cache berkas (.csv & .meta) pada direktori .cache.
 def get_sounding_for_date(
     date: pd.Timestamp, use_cache: bool = True, session: Optional[requests.Session] = None
 ) -> SoundingResult:

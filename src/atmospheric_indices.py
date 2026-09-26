@@ -189,6 +189,7 @@ def validate_clean_data(clean_data: dict) -> dict:
     return report
 
 
+# Menghitung indeks termodinamika atmosfer (terutama SBCIN/CIN) dengan delegasi penuh ke paket SounderPy.
 def calculate_indices(clean_data: dict) -> dict:
     """Identik dengan atmospheric_indices.py::calculate_indices (delegasi
     penuh ke sounderpy.calc.sounding_params)."""
@@ -211,6 +212,7 @@ def calculate_indices(clean_data: dict) -> dict:
     return result
 
 
+# Menghitung 4 indeks kestabilan atmosfer (K-Index, Total Totals, SWEAT, Lifted Index) via fungsi eksekusi langsung dari library SHARPpy.
 def calculate_sharppy_direct_indices(clean_data: dict) -> dict:
     """Identik dengan atmospheric_indices.py::calculate_sharppy_direct_indices
     (LI, TT, K-Index, SWEAT via pemanggilan langsung fungsi resmi SHARPpy)."""
@@ -295,6 +297,7 @@ def _scalar(v):
     return v
 
 
+# Fungsi utama wrapper: mengekstraksi dan menyusun 5 fitur indeks atmosfer (cin, kindex, li, tt, sweat) untuk 1 profil sounding mentah.
 def compute_indices_for_sounding(profile_df: pd.DataFrame) -> dict:
     """Wrapper inference: hitung 5 fitur atmosfer model final (cin, kindex,
     li, tt, sweat) untuk satu profile sounding mentah (satu tanggal/jam

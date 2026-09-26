@@ -10,6 +10,7 @@ from config.settings import HISTORICAL_DATASET_PATH
 
 _historical_cache = None
 
+# Memuat dataset historis terintegrasi (integrated_dataset.csv) ke dalam memori dengan caching internal untuk mempercepat akses data.
 def get_historical_df() -> pd.DataFrame:
     """Load dan kembalikan dataset historis. Menggunakan caching internal agar tidak lambat."""
     global _historical_cache
@@ -28,6 +29,8 @@ def get_historical_df() -> pd.DataFrame:
     _historical_cache = df
     return _historical_cache
 
+
+# Melakukan pencarian (lookup) baris data cuaca dan atmosfer dari dataset historis untuk satu tanggal spesifik.
 def get_historical_row(date_str: str) -> dict | None:
     """Lookup data historis untuk satu tanggal."""
     try:

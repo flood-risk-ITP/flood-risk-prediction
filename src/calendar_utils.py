@@ -16,6 +16,7 @@ from typing import Iterable, List
 import pandas as pd
 
 
+# Memvalidasi dan mengonversi tanggal target input ke format Timestamp tanpa komponen jam.
 def parse_target_date(target_date) -> pd.Timestamp:
     """Parse tanggal target ke pandas.Timestamp (tanpa komponen jam).
 
@@ -40,6 +41,7 @@ def parse_target_date(target_date) -> pd.Timestamp:
     )
 
 
+# Membentuk daftar 7 tanggal look-back berurutan (D-7 hingga D-1). Tanggal target (D) tidak dimasukkan dalam window.
 def build_window_dates(target_date: pd.Timestamp, lookback: int) -> List[pd.Timestamp]:
     """Bangun daftar tanggal D-lookback ... D-1 (ascending), tanggal D
     (target) TIDAK termasuk -- sesuai INFERENCE_CONTRACT.md Bagian 3."""
@@ -47,6 +49,7 @@ def build_window_dates(target_date: pd.Timestamp, lookback: int) -> List[pd.Time
     return [target_date - pd.Timedelta(days=n) for n in range(lookback, 0, -1)]
 
 
+# Membentuk indeks kalender harian penuh sebagai acuan utama (backbone) integrasi data Stage 5.
 def build_master_calendar(
     start_date, end_date, freq: str = "D"
 ) -> pd.DatetimeIndex:
@@ -56,6 +59,7 @@ def build_master_calendar(
     return pd.date_range(start=start_date, end=end_date, freq=freq)
 
 
+# Memeriksa kontinuitas tanggal window 7 hari (memastikan tidak ada duplikat, urutan ascending, dan tidak ada celah hari terlewat).
 def validate_window_continuity(dates: Iterable[pd.Timestamp]) -> dict:
     """Validasi bahwa daftar tanggal:
     - tidak duplikat
