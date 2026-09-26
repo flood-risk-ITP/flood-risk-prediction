@@ -32,3 +32,19 @@ reports/cin_diagnostic_*.csv
 
 # Streamlit specifications (design documents)
 STREAMLIT_SPEC.md
+# Local environment and generated files
+
+*.py[cod]
+.pytest_cache/
+.pytest-temp/
+pytest-cache-files-*/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
+.tmp/
+scratch/

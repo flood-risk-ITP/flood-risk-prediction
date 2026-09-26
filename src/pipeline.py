@@ -400,7 +400,7 @@ def predict_for_date(
         print("\n============================================================")
         print("PREDICTION")
         print("============================================================\n")
-        for cls_name in ["Rendah", "Sedang", "Tinggi", "Sangat Tinggi"]:
+        for cls_name in ["Low", "Medium", "High", "Very High"]:
             p = result["probabilities"].get(cls_name, 0.0) * 100
             print(f"{cls_name:<15}: {p:.2f}%")
         print(f"\nPredicted class: {result['predicted_class_name']}")

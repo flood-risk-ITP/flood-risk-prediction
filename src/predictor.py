@@ -47,7 +47,7 @@ def predict(model, X_input: np.ndarray) -> dict:
     # Mengambil indeks kategori risiko dengan nilai probabilitas tertinggi (argmax).
     pred_class = int(np.argmax(proba, axis=1)[0])
 
-    # Memetakan indeks hasil prediksi ke nama kategori risiko ("Rendah", "Sedang", "Tinggi", "Sangat Tinggi").
+    # Memetakan indeks hasil prediksi ke nama kategori risiko ("Low", "Medium", "High", "Very High").
     return {
         "predicted_class_index": pred_class,
         "predicted_class_name": CLASS_NAMES[pred_class],

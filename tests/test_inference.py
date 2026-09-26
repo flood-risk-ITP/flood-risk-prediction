@@ -79,7 +79,7 @@ def test_lookback_is_7():
 
 
 def test_class_names_order():
-    assert CLASS_NAMES == ["Rendah", "Sedang", "Tinggi", "Sangat Tinggi"]
+    assert CLASS_NAMES == ["Low", "Medium", "High", "Very High"]
 
 
 def test_stage7_monthly_medians_loadable():

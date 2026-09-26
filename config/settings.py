@@ -52,7 +52,7 @@ SOUNDING_FEATURE_COLUMNS = ["cin", "kindex", "li", "tt", "sweat"]
 LOOKBACK = 7  # D-7 ... D-1, target D tidak termasuk window
 
 # 4 kategori tingkat risiko banjir yang menjadi hasil keluaran klasifikasi model.
-CLASS_NAMES = ["Rendah", "Sedang", "Tinggi", "Sangat Tinggi"]
+CLASS_NAMES = ["Low", "Medium", "High", "Very High"]
 
 # -----------------------------------------------------------------------
 # STAGE 2 — placeholder standardisasi Ogimet (WAJIB direplikasi persis)
