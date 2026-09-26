@@ -43,6 +43,7 @@ st.set_page_config(
 st.markdown("""
 <style>
 @import url('https://cdn.jsdelivr.net/npm/@fontsource/cal-sans/index.css');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 
 @font-face {
     font-family: 'Cal Sans';
@@ -56,10 +57,20 @@ st.markdown("""
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 
-html, body, .stApp {
-    font-family: 'Cal Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+html, body, .stApp, [class*="css"] {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
     background: #f8f8f7 !important;
     color: #111 !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+.hero-title, .s-title, .result-class {
+    font-family: 'Cal Sans', 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    letter-spacing: 0.01em !important;
+}
+
+h1, h2, h3, h4, h5, h6, .hero-title, .s-title {
+    color: #414141 !important;
 }
 
 /* Hide Streamlit chrome */
@@ -72,7 +83,7 @@ section[data-testid="stSidebar"] { display: none !important; }
 /* Remove default block padding and force centering with max-width */
 .block-container {
     max-width: 1100px !important;
-    padding-top: 58px !important; /* height of navbar */
+    padding-top: 24px !important;
     padding-bottom: 80px !important;
     padding-left: 64px !important;
     padding-right: 64px !important;
@@ -86,74 +97,60 @@ section[data-testid="stSidebar"] { display: none !important; }
     }
 }
 
-/* ── Fixed Navbar ── */
-.navbar {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 9999;
-    height: 58px;
-    background: rgba(248, 248, 247, 0.92);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid #e4e4e0;
+/* Tighter default spacing between Streamlit elements */
+div[data-testid="stVerticalBlock"] { gap: 0.5rem !important; }
+div[data-testid="stHorizontalBlock"] { gap: 0.5rem !important; }
+div[data-testid="stElementContainer"] { margin-bottom: 0 !important; }
+
+/* ── Navbar (native Streamlit buttons styled as nav links; switches the view) ── */
+div[data-testid="stMarkdownContainer"]:has(.nav-logo) { margin-bottom: 0 !important; }
+.nav-logo { height: 46px; width: auto; display: block; }
+div[data-testid="stButton"] button[kind="secondary"] {
+    background: transparent !important; color: #666 !important; border: none !important;
+    padding: 12px 8px !important; font-size: 1rem !important; font-weight: 600 !important;
+    letter-spacing: 0.04em !important; text-transform: capitalize !important; box-shadow: none !important;
+    width: 100% !important;
 }
-.navbar-inner {
-    max-width: 1100px;
-    height: 100%;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 64px;
+div[data-testid="stButton"] button[kind="secondary"]:hover {
+    color: #111 !important; background: transparent !important;
 }
-@media (max-width: 768px) {
-    .navbar-inner {
-        padding: 0 24px;
+div[data-testid="stButton"] button[kind="secondary"]:disabled {
+    background: transparent !important; color: #bbb !important; border: none !important;
+}
+.navbar-divider { border: none; border-top: 1px solid #e4e4e0; margin: 0 0 32px; }
+
+/* Keep the navbar on a single row at every width (the marker sits right before st.columns) */
+div[data-testid="stElementContainer"]:has(.navbar-row-marker)
+  + div[data-testid="stLayoutWrapper"] div[data-testid="stHorizontalBlock"] {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+}
+div[data-testid="stElementContainer"]:has(.navbar-row-marker)
+  + div[data-testid="stLayoutWrapper"] div[data-testid="stColumn"] {
+    min-width: 0 !important;
+}
+@media (max-width: 640px) {
+    div[data-testid="stElementContainer"]:has(.navbar-row-marker)
+      + div[data-testid="stLayoutWrapper"] div[data-testid="stHorizontalBlock"] {
+        gap: 4px !important;
+    }
+    div[data-testid="stElementContainer"]:has(.navbar-row-marker)
+      + div[data-testid="stLayoutWrapper"] div[data-testid="stColumn"] {
+        flex: 1 1 0 !important;
+        width: auto !important;
+    }
+    .nav-logo { height: 32px !important; }
+    div[data-testid="stElementContainer"]:has(.navbar-row-marker)
+      + div[data-testid="stLayoutWrapper"] div[data-testid="stButton"] button[kind="secondary"] {
+        font-size: 0.8rem !important; padding: 8px 2px !important; letter-spacing: 0.01em !important;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 }
-.nav-brand-wrap, .nav-brand-wrap:hover, .nav-brand-wrap:focus, .nav-brand-wrap:active, .nav-brand-wrap * {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none !important;
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-}
-.nav-logo-img {
-    height: 26px;
-    width: 26px;
-    object-fit: contain;
-    border-radius: 4px;
-}
-.nav-brand {
-    font-size: 0.95rem;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-    color: #111 !important;
-    text-decoration: none !important;
-}
-.nav-links {
-    display: flex;
-    align-items: center;
-    gap: 40px;
-}
-.nav-links a {
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: capitalize;
-    color: #666;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-.nav-links a:hover { color: #111; }
-.nav-spacer { height: 58px; }
 
 /* ── Page Sections ── */
 .page-section {
     width: 100%;
-    padding: 60px 0 40px;
+    padding: 4px 0 16px;
 }
 .page-section-inner {
     width: 100%;
@@ -418,14 +415,15 @@ div[data-testid="stSelectbox"] div[data-baseweb="select"] {
     border-radius: 3px !important;
 }
 /* ── Buttons ── */
-div.stButton > button,
+/* Primary/action buttons - solid black; nav buttons (secondary) are styled above */
+div[data-testid="stButton"] button[kind="primary"],
 div.stDownloadButton > button {
     background: #0d0d0d !important;
     color: #f8f8f7 !important;
     border: 1px solid #0d0d0d !important;
     border-radius: 3px !important;
     padding: 13px 32px !important;
-    font-family: 'Cal Sans', sans-serif !important;
+    font-family: 'Montserrat', sans-serif !important;
     font-size: 0.8rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.08em !important;
@@ -433,11 +431,38 @@ div.stDownloadButton > button {
     transition: background 0.2s, border-color 0.2s !important;
     cursor: pointer !important;
 }
-div.stButton > button:hover,
+div[data-testid="stButton"] button[kind="primary"]:hover,
+div[data-testid="stButton"] button[kind="primary"]:focus,
+div[data-testid="stButton"] button[kind="primary"]:active,
 div.stDownloadButton > button:hover {
     background: #2a2a2a !important;
     border-color: #2a2a2a !important;
     color: #ffffff !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+div[data-testid="stButton"] button[kind="primary"]:disabled {
+    background: #e4e4e0 !important;
+    color: #777 !important;
+    border-color: #e4e4e0 !important;
+    cursor: not-allowed !important;
+}
+/* Space above primary buttons so they don't touch the content above */
+div[data-testid="stElementContainer"]:has(button[kind="primary"]) {
+    margin-top: 20px !important;
+}
+/* Keep the full button label visible (Streamlit ellipsizes it by default) */
+div[data-testid="stButton"] button[kind="primary"] div[data-testid="stMarkdownContainer"],
+div[data-testid="stButton"] button[kind="primary"] div[data-testid="stMarkdownContainer"] p {
+    overflow: visible !important;
+    text-overflow: unset !important;
+    white-space: nowrap !important;
+    width: auto !important;
+    max-width: none !important;
+}
+div[data-testid="stButton"] button[kind="primary"] * {
+    width: auto !important;
+    max-width: none !important;
 }
 
 /* ── Stage Tracker ── */
@@ -507,10 +532,10 @@ div.stDownloadButton > button:hover {
     line-height: 1.1;
     margin-bottom: 24px;
 }
-.rc-rendah, .rc-ringan { color: #1a1a1a; }
-.rc-sedang { color: #92400e; }
-.rc-tinggi, .rc-lebat { color: #991b1b; }
-.rc-sangat-tinggi, .rc-sangat-lebat { color: #6b21a8; }
+.rc-low { color: #8a8a86; }        /* Light - soft gray */
+.rc-medium { color: #d4a017; }     /* Medium - yellow */
+.rc-high { color: #dc2626; }       /* Heavy - red */
+.rc-very-high { color: #800000; }  /* Super Heavy - maroon */
 
 /* ── Probability Grid ── */
 .prob-grid {
@@ -694,6 +719,7 @@ div[data-testid="stExpander"] details summary svg {
 # SESSION STATE
 # ─────────────────────────────────────────────────────────────────────────────
 defaults = {
+    "view": "home",  # home | prediction | history | about
     "running": False,
     "selected_engine": "LSTM",
     "result": None,
@@ -827,13 +853,19 @@ _RISK_CSS = {
     "Medium": "rc-medium",
     "High": "rc-high",
     "Very High": "rc-very-high",
-    "Low": "rc-low",
-    "High": "rc-high",
-    "Very High": "rc-very-high",
+}
+
+# Display-only names for the four levels. The pipelines keep returning
+# Low / Medium / High / Very High; only what the user sees is renamed here.
+_RISK_LABEL = {
+    "Low": "Light",
+    "Medium": "Medium",
+    "High": "Heavy",
+    "Very High": "Super Heavy",
 }
 
 def _get_logo_base64():
-    logo_path = os.path.join(os.path.dirname(__file__), "assets", "aethersense_logo.png")
+    logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "aethersense_logo_navbar.png")
     if os.path.exists(logo_path):
         with open(logo_path, "rb") as f:
             return base64.b64encode(f.read()).decode("utf-8")
@@ -841,39 +873,54 @@ def _get_logo_base64():
 
 _LOGO_B64 = _get_logo_base64()
 
-# ── NAVBAR ──
-st.markdown(f"""
-<nav class="navbar">
-    <div class="navbar-inner">
-        <a href="#home" class="nav-brand-wrap">
-            <img src="data:image/jpeg;base64,{_LOGO_B64}" class="nav-logo-img" alt="AetherSense Logo" />
-            <span class="nav-brand">AetherSense</span>
-        </a>
-        <div class="nav-links">
-            <a href="#home">Home</a>
-            <a href="#prediction">Prediction</a>
-            <a href="#history">History</a>
-            <a href="#about">About</a>
-        </div>
-    </div>
-</nav>
-<div class="nav-spacer"></div>
-""", unsafe_allow_html=True)
+# ── NAVBAR (native Streamlit buttons -> switch session_state.view, no scrolling) ──
+def _go_to(view_name):
+    st.session_state.view = view_name
 
-# ── SECTION: HOME ──
-st.markdown('<a id="home" style="display:block;position:relative;top:-58px;"></a>', unsafe_allow_html=True)
-st.markdown(f"""
+
+nav_items = [("home", "Home"), ("prediction", "Prediction"), ("history", "History"), ("about", "About")]
+st.markdown('<div class="navbar-row-marker"></div>', unsafe_allow_html=True)
+brand_col, *nav_cols = st.columns([2] + [1] * len(nav_items))
+with brand_col:
+    st.markdown(
+        f'<img src="data:image/png;base64,{_LOGO_B64}" class="nav-logo" alt="AetherSense">',
+        unsafe_allow_html=True,
+    )
+for col, (view_key, label) in zip(nav_cols, nav_items):
+    with col:
+        btn_label = f"● {label}" if st.session_state.view == view_key else label
+        # Locked while an assessment is running: switching view would interrupt the progress loop
+        if st.button(btn_label, key=f"nav_{view_key}", type="secondary", disabled=st.session_state.running):
+            _go_to(view_key)
+            st.rerun()
+
+st.markdown('<hr class="navbar-divider">', unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# VIEWS - only one page is rendered at a time
+# ─────────────────────────────────────────────────────────────────────────────
+# ── VIEW: HOME ──
+if st.session_state.view == "home":
+    st.markdown("""
 <div class="page-section hero-section">
 <div class="page-section-inner">
 <div class="hero-wrap">
-    <img src="data:image/png;base64,{_LOGO_B64}" class="hero-logo-img" alt="AetherSense Logo" />
-    <div class="hero-eyebrow">AETHERSENSE</div>
-    <h1 class="hero-title">Flood Risk Assessment</h1>
+    <h1 class="hero-title">Flood Risk</br>Assessment</h1>
     <p class="hero-body">
-       Assess flood risk in Padang City with data-driven insights from local weather and atmospheric conditions
+       Predicting flood risk levels in Padang City using data-driven insights from local weather and atmospheric conditions with LSTM, Random Forest, and XGBoost models. Choose your model now!
     </p>
-    <a href="#prediction" class="hero-cta">START NOW &nbsp;→</a>
-    <div class="hero-stats">
+</div>
+</div>
+""", unsafe_allow_html=True)
+
+    col_cta, _ = st.columns([1, 4])
+    with col_cta:
+        if st.button("Start Now  →", key="btn_start_now", type="primary"):
+            _go_to("prediction")
+            st.rerun()
+
+    st.markdown("""
+<div class="hero-stats">
         <div class="hero-stat">
             <div class="hero-stat-val">LSTM / RF + XGBoost</div>
             <div class="hero-stat-lbl">Prediction Method</div>
@@ -895,19 +942,13 @@ st.markdown(f"""
             <div class="hero-stat-lbl">Weather Data Sources</div>
         </div>
     </div>
-</div>
-</div>
-</div>
 """, unsafe_allow_html=True)
 
-st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-
-# ── SECTION: PREDICTION ──
-st.markdown('<a id="prediction" style="display:block;position:relative;top:-58px;"></a>', unsafe_allow_html=True)
-st.markdown("""
+# ── VIEW: PREDICTION ──
+elif st.session_state.view == "prediction":
+    st.markdown("""
 <div class="page-section prediction-section">
 <div class="page-section-inner">
-    <div class="s-eyebrow">Prediction</div>
     <div class="s-title">Flood Risk Assessment</div>
     <div class="s-body">
        Select a prediction method and date to assess. The system will retrieve the weather observations needed for the assessment
@@ -917,266 +958,260 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-col_input, col_pad = st.columns([2, 3])
-with col_input:
-    engine_choice_widget = st.selectbox(
-        "Prediction Method",
-        options=["LSTM", "RF + XGBoost Ensemble"],
-        format_func=lambda value: (
-            "LSTM"
-            if value == "LSTM"
-            else "RF + XGBoost"
-        ),
-        key="engine_picker",
-        help="Select the model used to assess flood risk",
-    )
-    target_date_widget = st.date_input(
-        "Date to Assess",
-        value=None,
-        key="date_picker",
-        help="The system will retrieve weather data for this date",
-    )
-    st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-    submit_disabled = (target_date_widget is None) or st.session_state.running
-    submit_clicked = st.button(
-        "Assess Flood Risk",
-        disabled=submit_disabled,
-        key="btn_submit",
-    )
+    col_input, col_pad = st.columns([2, 3])
+    with col_input:
+        engine_choice_widget = st.selectbox(
+            "Prediction Method",
+            options=["LSTM", "RF + XGBoost Ensemble"],
+            format_func=lambda value: (
+                "LSTM"
+                if value == "LSTM"
+                else "RF + XGBoost"
+            ),
+            key="engine_picker",
+            help="Select the model used to assess flood risk",
+        )
+        target_date_widget = st.date_input(
+            "Date to Assess",
+            value=None,
+            key="date_picker",
+            help="The system will retrieve weather data for this date",
+        )
+        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+        submit_disabled = (target_date_widget is None) or st.session_state.running
+        submit_clicked = st.button(
+            "Assess Flood Risk",
+            disabled=submit_disabled,
+            key="btn_submit",
+            type="primary",
+        )
 
-if submit_clicked and target_date_widget is not None:
-    st.session_state.target_date = target_date_widget.strftime("%Y-%m-%d")
-    st.session_state.selected_engine = engine_choice_widget
-    st.session_state.running = True
-    st.session_state.result = None
-    st.session_state.csv_path = None
-    st.rerun()
+    if submit_clicked and target_date_widget is not None:
+        st.session_state.target_date = target_date_widget.strftime("%Y-%m-%d")
+        st.session_state.selected_engine = engine_choice_widget
+        st.session_state.running = True
+        st.session_state.result = None
+        st.session_state.csv_path = None
+        st.rerun()
 
-# Real-time progress tracking
-if st.session_state.running and st.session_state.target_date:
-    tgt = st.session_state.target_date
-    eng = st.session_state.selected_engine
+    # Real-time progress tracking
+    if st.session_state.running and st.session_state.target_date:
+        tgt = st.session_state.target_date
+        eng = st.session_state.selected_engine
     
-    current_stages = LSTM_PIPELINE_STAGES if eng == "LSTM" else AETHERSENSE_PIPELINE_STAGES
+        current_stages = LSTM_PIPELINE_STAGES if eng == "LSTM" else AETHERSENSE_PIPELINE_STAGES
 
-    st.markdown(
-        f'<div style="margin-top:32px; font-size:0.7rem; font-weight:700; '
-        f'letter-spacing:0.18em; text-transform:uppercase; color:#aaa;">'
-        f'Preparing Assessment [{eng}] for Date {tgt}</div>',
-        unsafe_allow_html=True,
-    )
-    tracker_ph = st.empty()
+        st.markdown(
+            f'<div style="margin-top:32px; font-size:0.7rem; font-weight:700; '
+            f'letter-spacing:0.18em; text-transform:uppercase; color:#aaa;">'
+            f'Preparing Assessment [{eng}] for Date {tgt}</div>',
+            unsafe_allow_html=True,
+        )
+        tracker_ph = st.empty()
 
-    statuses = [
-        {"status": "running" if i == 0 else "pending", "elapsed": None}
-        for i in range(len(current_stages))
-    ]
-    tracker_ph.markdown(_render_tracker(statuses, current_stages), unsafe_allow_html=True)
+        statuses = [
+            {"status": "running" if i == 0 else "pending", "elapsed": None}
+            for i in range(len(current_stages))
+        ]
+        tracker_ph.markdown(_render_tracker(statuses, current_stages), unsafe_allow_html=True)
 
-    log_q: queue.Queue = queue.Queue()
-    result_ref: dict = {"result": None}
-    orig_stdout = sys.stdout
+        log_q: queue.Queue = queue.Queue()
+        result_ref: dict = {"result": None}
+        orig_stdout = sys.stdout
 
-    thread = threading.Thread(
-        target=_inference_worker,
-        args=(eng, tgt, result_ref, log_q),
-        daemon=True,
-    )
+        thread = threading.Thread(
+            target=_inference_worker,
+            args=(eng, tgt, result_ref, log_q),
+            daemon=True,
+        )
 
-    thread.start()
-    sys.stdout = ThreadAwareWriter(orig_stdout, log_q, thread.ident)
+        thread.start()
+        sys.stdout = ThreadAwareWriter(orig_stdout, log_q, thread.ident)
 
-    done = False
-    while not done:
-        try:
-            while True:
-                line = log_q.get_nowait()
-                if line is None:
-                    done = True
-                    break
-                # Update status
-                for i, stage in enumerate(current_stages):
-                    if stage["key"] in line:
-                        if "OK" in line or "FAILED" in line:
-                            m = re.search(r"\((\d+\.\d+)s\)", line)
-                            statuses[i]["elapsed"] = m.group(1) if m else None
-                            statuses[i]["status"] = "done" if "OK" in line else "failed"
-                        else:
-                            statuses[i]["status"] = "running"
+        done = False
+        while not done:
+            try:
+                while True:
+                    line = log_q.get_nowait()
+                    if line is None:
+                        done = True
+                        break
+                    # Update status
+                    for i, stage in enumerate(current_stages):
+                        if stage["key"] in line:
+                            if "OK" in line or "FAILED" in line:
+                                m = re.search(r"\((\d+\.\d+)s\)", line)
+                                statuses[i]["elapsed"] = m.group(1) if m else None
+                                statuses[i]["status"] = "done" if "OK" in line else "failed"
+                            else:
+                                statuses[i]["status"] = "running"
+                    tracker_ph.markdown(_render_tracker(statuses, current_stages), unsafe_allow_html=True)
+            except queue.Empty:
+                pass
+
+            if not done:
                 tracker_ph.markdown(_render_tracker(statuses, current_stages), unsafe_allow_html=True)
-        except queue.Empty:
-            pass
+                time.sleep(0.2)
 
-        if not done:
-            tracker_ph.markdown(_render_tracker(statuses, current_stages), unsafe_allow_html=True)
-            time.sleep(0.2)
+        sys.stdout = orig_stdout
+        thread.join(timeout=10)
 
-    sys.stdout = orig_stdout
-    thread.join(timeout=10)
+        for s in statuses:
+            if s["status"] == "running":
+                s["status"] = "done"
+        tracker_ph.markdown(_render_tracker(statuses, current_stages), unsafe_allow_html=True)
 
-    for s in statuses:
-        if s["status"] == "running":
-            s["status"] = "done"
-    tracker_ph.markdown(_render_tracker(statuses, current_stages), unsafe_allow_html=True)
+        final_result = result_ref["result"]
+        st.session_state.result = final_result
+        st.session_state.running = False
 
-    final_result = result_ref["result"]
-    st.session_state.result = final_result
-    st.session_state.running = False
+        csv_candidate = f"inference_features_{tgt}.csv"
+        if os.path.exists(csv_candidate):
+            st.session_state.csv_path = csv_candidate
 
-    csv_candidate = f"inference_features_{tgt}.csv"
-    if os.path.exists(csv_candidate):
-        st.session_state.csv_path = csv_candidate
-
-    # Update history
-    if final_result:
-        pred_class_str = "-"
-        if "lstm_result" in final_result and final_result["lstm_result"].get("status") == "SUCCESS":
-            pred_class_str = final_result["lstm_result"].get("predicted_class_name", "-")
-        elif "aethersense_result" in final_result and final_result["aethersense_result"].get("status") == "SUCCESS":
-            pred_class_str = final_result["aethersense_result"].get("predicted_class_name", "-")
+        # Update history
+        if final_result:
+            pred_class_str = "-"
+            if "lstm_result" in final_result and final_result["lstm_result"].get("status") == "SUCCESS":
+                pred_class_str = final_result["lstm_result"].get("predicted_class_name", "-")
+            elif "aethersense_result" in final_result and final_result["aethersense_result"].get("status") == "SUCCESS":
+                pred_class_str = final_result["aethersense_result"].get("predicted_class_name", "-")
             
-        entry = {
-            "Date": tgt,
-            "Engine Selected": eng,
-            "Predicted Risk Class": pred_class_str,
+            entry = {
+                "Date": tgt,
+                "Engine Selected": eng,
+                "Predicted Risk Class": pred_class_str,
+            }
+            if not any(h["Date"] == tgt and h["Engine Selected"] == eng for h in st.session_state.history):
+                st.session_state.history.insert(0, entry)
+
+    def _friendly_reason(reason):
+        """Translate pipeline diagnostics into concise user-facing English."""
+        text = str(reason)
+        replacements = {
+            "Data tidak tersedia untuk tanggal ini:": "Weather data is unavailable for this date:",
+            "Kolom fitur tidak tersedia:": "Required weather factors are unavailable:",
+            "Kolom fitur bukan numerik:": "Some weather data is not numeric:",
+            "Gagal akuisisi data Ogimet:": "Could not retrieve daily weather observations:",
+            "Gagal akuisisi data sounding:": "Could not retrieve upper-air weather observations:",
+            "Validation gate gagal:": "The required weather data could not be verified:",
         }
-        if not any(h["Date"] == tgt and h["Engine Selected"] == eng for h in st.session_state.history):
-            st.session_state.history.insert(0, entry)
-
-def _friendly_reason(reason):
-    """Translate pipeline diagnostics into concise user-facing English."""
-    text = str(reason)
-    replacements = {
-        "Data tidak tersedia untuk tanggal ini:": "Weather data is unavailable for this date:",
-        "Kolom fitur tidak tersedia:": "Required weather factors are unavailable:",
-        "Kolom fitur bukan numerik:": "Some weather data is not numeric:",
-        "Gagal akuisisi data Ogimet:": "Could not retrieve daily weather observations:",
-        "Gagal akuisisi data sounding:": "Could not retrieve upper-air weather observations:",
-        "Validation gate gagal:": "The required weather data could not be verified:",
-    }
-    for source, target in replacements.items():
-        text = text.replace(source, target)
-    return text
-# Helper function to render a single engine result card
-def render_engine_result_card(engine_title, res):
-    if not res:
-        st.info("No assessment result is available for this method.")
-        return
+        for source, target in replacements.items():
+            text = text.replace(source, target)
+        return text
+    # Helper function to render a single engine result card
+    def render_engine_result_card(engine_title, res):
+        if not res:
+            st.info("No assessment result is available for this method.")
+            return
         
-    tgt_date = res.get("target_date", "")
-    status = res.get("status", "")
+        tgt_date = res.get("target_date", "")
+        status = res.get("status", "")
     
-    with st.container(border=True):
-        st.markdown(f'<div class="result-eyebrow">{engine_title}</div>', unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown(f'<div class="result-eyebrow">{engine_title}</div>', unsafe_allow_html=True)
         
-        if status == "SUCCESS":
-            pred = res.get("predicted_class_name", "")
-            rc = _RISK_CSS.get(pred, "rc-rendah")
-            probs = res.get("probabilities", {})
+            if status == "SUCCESS":
+                pred = res.get("predicted_class_name", "")
+                rc = _RISK_CSS.get(pred, "rc-low")
+                probs = res.get("probabilities", {})
             
-            st.markdown(f'<div class="result-class {rc}">{pred}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="result-class {rc}">{_RISK_LABEL.get(pred, pred)}</div>', unsafe_allow_html=True)
             
-            cards_html = ""
-            for cls_name, p in probs.items():
-                is_active = "active" if cls_name == pred else ""
-                cards_html += f"""
+                cards_html = ""
+                for cls_name, p in probs.items():
+                    is_active = "active" if cls_name == pred else ""
+                    cards_html += f"""
                 <div class="prob-card {is_active}">
-                    <div class="prob-card-lbl">{cls_name}</div>
+                    <div class="prob-card-lbl">{_RISK_LABEL.get(cls_name, cls_name)}</div>
                     <div class="prob-card-val">{p*100:.1f}%</div>
                     <div class="pbar-bg"><div class="pbar-fill" style="width:{p*100:.1f}%"></div></div>
                 </div>"""
-            st.markdown(f'<div class="prob-grid">{cards_html}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="prob-grid">{cards_html}</div>', unsafe_allow_html=True)
             
-            # Display SHAP if available
-            if "shap_values" in res:
-                shap_info = res["shap_values"]
-                with st.expander("View Factors Influencing Prediction"):
-                    df_shap = pd.DataFrame({
-                        "Weather Factor": shap_info["feature_names"],
-                        "Value": shap_info["feature_values"],
-                        "Influence on Prediction": shap_info["values"],
-                    }).sort_values(by="Influence on Prediction", key=abs, ascending=False)
-                    st.dataframe(df_shap, use_container_width=True, hide_index=True)
+                # Display SHAP if available
+                if "shap_values" in res:
+                    shap_info = res["shap_values"]
+                    with st.expander("View Factors Influencing Prediction"):
+                        df_shap = pd.DataFrame({
+                            "Weather Factor": shap_info["feature_names"],
+                            "Value": shap_info["feature_values"],
+                            "Influence on Prediction": shap_info["values"],
+                        }).sort_values(by="Influence on Prediction", key=abs, ascending=False)
+                        st.dataframe(df_shap, use_container_width=True, hide_index=True)
                     
-        else:
-            reasons = res.get("reasons", ["The required weather data could not be verified."])
-            st.error(f"Flood risk assessment could not be completed using {engine_title}:")
-            for r in reasons:
-                st.markdown(f"<small>• {_friendly_reason(r)}</small>", unsafe_allow_html=True)
+            else:
+                reasons = res.get("reasons", ["The required weather data could not be verified."])
+                st.error(f"Flood risk assessment could not be completed using {engine_title}:")
+                for r in reasons:
+                    st.markdown(f"<small>• {_friendly_reason(r)}</small>", unsafe_allow_html=True)
                 
 
 
-# Render Prediction Results
-if st.session_state.result and not st.session_state.running:
-    res_dict = st.session_state.result
-    eng_choice = res_dict.get("engine_choice", "LSTM")
-    tgt_date = res_dict.get("target_date", "")
+    # Render Prediction Results
+    if st.session_state.result and not st.session_state.running:
+        res_dict = st.session_state.result
+        eng_choice = res_dict.get("engine_choice", "LSTM")
+        tgt_date = res_dict.get("target_date", "")
 
-    st.markdown(f"""
+        st.markdown(f"""
     <div style="margin-top:20px; font-size:0.75rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:#888;">
         Flood Risk Assessment — Date: {tgt_date}
     </div>
     """, unsafe_allow_html=True)
 
-    if eng_choice == "LSTM":
-        render_engine_result_card("LSTM — 7-Day Weather Pattern Model", res_dict.get("lstm_result"))
-    elif eng_choice == "RF + XGBoost Ensemble":
-        render_engine_result_card("RF + XGBoost — Combined Prediction Model", res_dict.get("aethersense_result"))
+        if eng_choice == "LSTM":
+            render_engine_result_card("LSTM — 7-Day Weather Pattern Model", res_dict.get("lstm_result"))
+        elif eng_choice == "RF + XGBoost Ensemble":
+            render_engine_result_card("RF + XGBoost — Combined Prediction Model", res_dict.get("aethersense_result"))
 
-    # Feature table download if available
-    csv_path = st.session_state.csv_path
-    if csv_path and os.path.exists(csv_path):
-        try:
-            df_feat = pd.read_csv(csv_path)
-            with st.expander("View Weather Data Used"):
-                st.dataframe(df_feat, use_container_width=True, hide_index=True)
-        except Exception:
-            pass
+        # Feature table download if available
+        csv_path = st.session_state.csv_path
+        if csv_path and os.path.exists(csv_path):
+            try:
+                df_feat = pd.read_csv(csv_path)
+                with st.expander("View Weather Data Used"):
+                    st.dataframe(df_feat, use_container_width=True, hide_index=True)
+            except Exception:
+                pass
 
-    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
-    col_reset, _ = st.columns([1, 4])
-    with col_reset:
-        if st.button("Assess Another Date", key="btn_reset"):
-            st.session_state.result = None
-            st.session_state.target_date = None
-            st.session_state.csv_path = None
-            st.rerun()
+        st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+        col_reset, _ = st.columns([1, 4])
+        with col_reset:
+            if st.button("Assess Another Date", key="btn_reset", type="primary"):
+                st.session_state.result = None
+                st.session_state.target_date = None
+                st.session_state.csv_path = None
+                st.rerun()
 
-st.markdown("</div></div>", unsafe_allow_html=True)
-st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-
-# ── SECTION: HISTORY ──
-st.markdown('<a id="history" style="display:block;position:relative;top:-58px;"></a>', unsafe_allow_html=True)
-st.markdown("""
+# ── VIEW: HISTORY ──
+elif st.session_state.view == "history":
+    st.markdown("""
 <div class="page-section history-section">
 <div class="page-section-inner">
-    <div class="s-eyebrow">History</div>
     <div class="s-title">Assessment History</div>
     <div class="s-body">List of flood risk assessments performed during this session</div>
 """, unsafe_allow_html=True)
 
-hist = st.session_state.history
-if hist:
-    history_df = pd.DataFrame(hist).rename(columns={
-        "Engine Selected": "Prediction Method",
-        "Predicted Risk Class": "Flood Risk Level",
-    })
-    st.dataframe(history_df, use_container_width=True, hide_index=True)
-else:
-    st.markdown(
-        '<div class="empty-state">No assessments performed yet. Select a date above to begin.</div>',
-        unsafe_allow_html=True,
-    )
+    hist = st.session_state.history
+    if hist:
+        history_df = pd.DataFrame(hist).rename(columns={
+            "Engine Selected": "Prediction Method",
+            "Predicted Risk Class": "Flood Risk Level",
+        })
+        history_df["Flood Risk Level"] = history_df["Flood Risk Level"].map(lambda v: _RISK_LABEL.get(v, v))
+        st.dataframe(history_df, use_container_width=True, hide_index=True)
+    else:
+        st.markdown(
+            '<div class="empty-state">No assessments performed yet. Open the Prediction page to begin.</div>',
+            unsafe_allow_html=True,
+        )
 
-st.markdown("</div></div>", unsafe_allow_html=True)
-st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-
-# ── SECTION: ABOUT ──
-st.markdown('<a id="about" style="display:block;position:relative;top:-58px;"></a>', unsafe_allow_html=True)
-st.markdown("""
+# ── VIEW: ABOUT ──
+elif st.session_state.view == "about":
+    st.markdown("""
 <div class="page-section">
 <div class="page-section-inner">
-<div class="s-eyebrow">About</div>
 <div class="s-title">What is AetherSense?</div>
 <p class="about-desc">
 AetherSense is a flood risk assessment system for Padang City. It uses local weather and atmospheric data to assess the level of flood risk using two prediction methods.
@@ -1206,12 +1241,12 @@ AetherSense is a flood risk assessment system for Padang City. It uses local wea
 
 # ── FOOTER ──
 st.markdown("""
-<div style="border-top:1px solid #e4e4e0; padding:32px 64px; display:flex; justify-content:space-between; align-items:center;">
+<div style="border-top:1px solid #e4e4e0; margin-top:40px; padding:32px 0; flex-wrap:wrap; gap:8px; display:flex; justify-content:space-between; align-items:center;">
     <span style="font-size:0.7rem; color:#bbb; letter-spacing:0.1em; text-transform:uppercase;">
         AetherSense — Flood Risk Assessment System
     </span>
     <span style="font-size:0.7rem; color:#bbb; letter-spacing:0.06em;">
-        © 2026 Imam. All rights reserved.
+        © 2026 AetherSense. All rights reserved.
     </span>
 </div>
 """, unsafe_allow_html=True)
