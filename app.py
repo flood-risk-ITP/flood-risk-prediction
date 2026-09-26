@@ -313,16 +313,110 @@ section[data-testid="stSidebar"] { display: none !important; }
     color: #888 !important;
     margin-bottom: 6px !important;
 }
-div[data-testid="stDateInput"] div[data-baseweb="input"],
+div[data-testid="stDateInput"] {
+    font-family: 'Cal Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Date input uses Streamlit's React Aria DOM, including a portaled calendar. */
+div[data-testid="stDateInputField"] {
+    background-color: #ffffff !important;
+    border: 1px solid #ddd !important;
+    border-radius: 3px !important;
+    box-shadow: none !important;
+    color: #111 !important;
+    font-family: 'Cal Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-size: 0.8rem !important;
+}
+div[data-testid="stDateInputField"]:focus-within {
+    border-color: #999 !important;
+    box-shadow: 0 0 0 1px #999 !important;
+    outline: none !important;
+}
+div[data-testid="stDateInputField"] [role="spinbutton"] {
+    color: #111 !important;
+    font-size: 0.8rem !important;
+    font-weight: 400 !important;
+}
+div[data-testid="stDateInputField"] [role="spinbutton"][data-placeholder],
+div[data-testid="stDateInputField"] [data-type="literal"] {
+    color: #777 !important;
+}
+div[data-testid="stDateInputField"] [role="spinbutton"][data-focused] {
+    background-color: #0284c7 !important;
+    color: #ffffff !important;
+}
+div[data-testid="stDateInputField"] button {
+    background-color: transparent !important;
+    border: none !important;
+    color: #666 !important;
+}
+div[data-testid="stDateInputField"] button:hover {
+    color: #111 !important;
+}
+
+/* Native Streamlit calendar: keep its header/grid structure and theme only the key elements. */
+div[data-testid="stDateInputCalendar"] {
+    background-color: #ffffff !important;
+    border: 1px solid #e4e4e0 !important;
+    box-shadow: 0 4px 16px rgba(13, 13, 13, 0.08) !important;
+    color: #111 !important;
+    color-scheme: light !important;
+    font-family: 'Cal Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+div[data-testid="stDateInputCalendar"] header {
+    color: #111 !important;
+}
+div[data-testid="stDateInputCalendar"] header button {
+    background-color: transparent !important;
+    border: none !important;
+    color: #111 !important;
+    font-family: 'Cal Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+div[data-testid="stDateInputCalendar"] header button:hover,
+div[data-testid="stDateInputCalendar"] header button[data-hovered] {
+    background-color: #f5f5f4 !important;
+}
+div[data-testid="stDateInputCalendar"] header button:focus-visible,
+div[data-testid="stDateInputCalendar"] header button[data-focus-visible] {
+    outline: 2px solid #0284c7 !important;
+    outline-offset: 2px !important;
+}
+div[data-testid="stDateInputCalendar"] header button svg {
+    color: #111 !important;
+    fill: currentColor !important;
+}
+div[data-testid="stDateInputCalendar"] [role="columnheader"],
+div[data-testid="stDateInputCalendar"] thead th {
+    color: #111 !important;
+}
+div[data-testid="stDateInputCalendar"] [role="gridcell"] {
+    color: #111 !important;
+}
+div[data-testid="stDateInputCalendar"] [role="gridcell"]:hover,
+div[data-testid="stDateInputCalendar"] [role="gridcell"][data-hovered] {
+    background-color: #f5f5f4 !important;
+}
+div[data-testid="stDateInputCalendar"] [role="gridcell"][data-focus-visible] {
+    outline: 2px solid #0284c7 !important;
+    outline-offset: 2px !important;
+}
+div[data-testid="stDateInputCalendar"] [data-selected] {
+    background-color: #0284c7 !important;
+    color: #ffffff !important;
+}
+div[data-testid="stDateInputCalendar"] [data-outside-month],
+div[data-testid="stDateInputCalendar"] [data-disabled],
+div[data-testid="stDateInputCalendar"] [data-unavailable] {
+    color: #999 !important;
+}
+div[data-testid="stDateInputCalendar"] [data-today]:not([data-outside-month]) {
+    text-decoration-color: #0284c7 !important;
+}
 div[data-testid="stSelectbox"] div[data-baseweb="select"] {
     background-color: #ffffff !important;
     border: 1px solid #ddd !important;
     border-radius: 3px !important;
 }
-div[data-testid="stDateInput"] input {
-    color: #111 !important;
-}
-
 /* ── Buttons ── */
 div.stButton > button,
 div.stDownloadButton > button {
